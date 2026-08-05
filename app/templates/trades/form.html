@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if mode=='edit' else 'New' }} Trade — {{ app_name }}{% endblock %}
+{% block content %}
+{% set f = form_data if form_data else {} %}
+{% set t = trade %}
+<div class="row-between mb-2">
+  <h2 style="margin:0">{{ 'Edit Trade' if mode=='edit' else 'Add Trade' }}</h2>
+  <a class="btn btn-secondary" href="/trades">Back</a>
+</div>
+
+{% if errors %}
+<div class="error-summary" role="alert"><strong>Please fix the following:</strong><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+{% if warnings %}
+<div class="warning-summary"><strong>Warnings:</strong><ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" class="form-layout" id="tradeForm" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="stack">
+    <div class="card form-section">
+      <h3>Basic Information</h3>
+      <div class="form-grid">
+        <div class="form-group"><label for="trade_date">Open date &amp; time</label>
+          <input type="datetime-local" id="trade_date" name="trade_date" required
+            value="{{ f.get('trade_date') or (t.trade_date.strftime('%Y-%m-%dT%H:%M') if t and t.trade_date else '') }}"></div>
+        <div class="form-group"><label for="close_date">Close date &amp; time</label>
+          <input type="datetime-local" id="close_date" name="close_date"
+            value="{{ f.get('close_date') or (t.close_date.strftime('%Y-%m-%dT%H:%M') if t and t.close_date else '') }}"></div>
+        <div class="form-group"><label for="market">Market</label>
+          <select id="market" name="market" required>
+            {% for m in ['XAU/USD','BTC/USD'] %}
+            <option value="{{ m }}" {% if (f.get('market') or (t.market if t else ''))==m %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select></div>
+        <div class="form-group"><label for="direction">Direction</label>
+          <select id="direction" name="direction" required>
+            <option value="BUY" {% if (f.get('direction') or (t.direction if t else 'BUY'))=='BUY' %}selected{% endif %}>BUY</option>
+            <option value="SELL" {% if (f.get('direction') or (t.direction if t else ''))=='SELL' %}selected{% endif %}>SELL</option>
+          </select></div>
+        <div class="form-group"><label for="status">Status</label>
+          <select id="status" name="status">
+            {% for s in ['OPEN','WIN','LOSS','BREAKEVEN'] %}
+            <option value="{{ s }}" {% if (f.get('status') or (t.status if t else 'OPEN'))==s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <label class="checkbox-row mt-1"><input type="checkbox" name="status_manual" value="1" id="status_manual"> Keep status (don't auto-suggest)</label>
+        </div>
+        <div class="form-group"><label for="trading_session">Trading session</label>
+          <select id="trading_session" name="trading_session"><option value="">—</option>{% for s in sessions %}<option value="{{ s }}" {% if (f.get('trading_session') or (t.trading_session if t else ''))==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="timeframe">Timeframe</label>
+          <select id="timeframe" name="timeframe"><option value="">—</option>{% for tf in timeframes %}<option value="{{ tf }}" {% if (f.get('timeframe') or (t.timeframe if t else ''))==tf %}selected{% endif %}>{{ tf }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="setup">Setup</label>
+          <select id="setup" name="setup"><option value="">—</option>{% for s in setups %}<option value="{{ s }}" {% if (f.get('setup') or (t.setup if t else ''))==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="external_ticket">External ticket</label>
+          <input id="external_ticket" name="external_ticket" value="{{ f.get('external_ticket') or (t.external_ticket if t and t.external_ticket else '') }}"></div>
+      </div>
+    </div>
+
+    <div class="card form-section">
+      <h3>Price Information</h3>
+      <div class="form-grid">
+        <div class="form-group"><label for="entry_price">Entry price</label><input id="entry_price" name="entry_price" required inputmode="decimal" value="{{ f.get('entry_price') or (t.entry_price if t else '') }}"></div>
+        <div class="form-group"><label for="exit_price">Exit price</label><input id="exit_price" name="exit_price" inputmode="decimal" value="{{ f.get('exit_price') or (t.exit_price if t and t.exit_price is not none else '') }}"></div>
+        <div class="form-group"><label for="stop_loss">Stop loss</label><input id="stop_loss" name="stop_loss" inputmode="decimal" value="{{ f.get('stop_loss') or (t.stop_loss if t and t.stop_loss is not none else '') }}"></div>
+        <div class="form-group"><label for="take_profit">Take profit</label><input id="take_profit" name="take_profit" inputmode="decimal" value="{{ f.get('take_profit') or (t.take_profit if t and t.take_profit is not none else '') }}"></div>
+        <div class="form-group"><label for="lot_size">Lot size</label><input id="lot_size" name="lot_size" required inputmode="decimal" value="{{ f.get('lot_size') or (t.lot_size if t else '0.10') }}"></div>
+        <div class="form-group"><label for="pips">Pips</label><input id="pips" name="pips" inputmode="decimal" value="{{ f.get('pips') or (t.pips if t and t.pips is not none else '') }}"></div>
+      </div>
+    </div>
+
+    <div class="card form-section">
+      <h3>Financial Information</h3>
+      <div class="form-grid">
+        <div class="form-group"><label for="profit_loss">Gross P/L</label><input id="profit_loss" name="profit_loss" inputmode="decimal" value="{{ f.get('profit_loss') or (t.profit_loss if t and t.profit_loss is not none else '') }}"></div>
+        <div class="form-group"><label for="commission">Commission</label><input id="commission" name="commission" inputmode="decimal" value="{{ f.get('commission') or (t.commission if t else '0') }}"></div>
+        <div class="form-group"><label for="swap">Swap</label><input id="swap" name="swap" inputmode="decimal" value="{{ f.get('swap') or (t.swap if t else '0') }}"></div>
+        <div class="form-group"><label for="fees">Other fees</label><input id="fees" name="fees" inputmode="decimal" value="{{ f.get('fees') or (t.fees if t else '0') }}"></div>
+        <div class="form-group"><label for="net_profit_loss">Net P/L</label>
+          <input id="net_profit_loss" name="net_profit_loss" inputmode="decimal" value="{{ f.get('net_profit_loss') or (t.net_profit_loss if t and t.net_profit_loss is not none else '') }}">
+          <label class="checkbox-row mt-1"><input type="checkbox" name="net_profit_loss_manual" value="1" id="net_manual"> Manual net P/L</label>
+        </div>
+        <div class="form-group"><label for="account_balance_after">Balance after</label><input id="account_balance_after" name="account_balance_after" inputmode="decimal" value="{{ f.get('account_balance_after') or (t.account_balance_after if t and t.account_balance_after is not none else '') }}"></div>
+      </div>
+    </div>
+
+    <div class="card form-section">
+      <h3>Trading Plan</h3>
+      <div class="form-grid">
+        <div class="form-group full"><label for="entry_reason">Entry reason</label><textarea id="entry_reason" name="entry_reason">{{ f.get('entry_reason') or (t.entry_reason if t and t.entry_reason else '') }}</textarea></div>
+        <div class="form-group full"><label for="exit_reason">Exit reason</label><textarea id="exit_reason" name="exit_reason">{{ f.get('exit_reason') or (t.exit_reason if t and t.exit_reason else '') }}</textarea></div>
+        <div class="form-group"><label for="risk_amount">Risk amount</label><input id="risk_amount" name="risk_amount" inputmode="decimal" value="{{ f.get('risk_amount') or (t.risk_amount if t and t.risk_amount is not none else '') }}"></div>
+        <div class="form-group"><label for="planned_reward">Planned reward</label><input id="planned_reward" name="planned_reward" inputmode="decimal" value="{{ f.get('planned_reward') or (t.planned_reward if t and t.planned_reward is not none else '') }}"></div>
+        <div class="form-group"><label for="risk_reward_ratio">Risk-to-reward</label>
+          <input id="risk_reward_ratio" name="risk_reward_ratio" inputmode="decimal" value="{{ f.get('risk_reward_ratio') or (t.risk_reward_ratio if t and t.risk_reward_ratio is not none else '') }}">
+          <label class="checkbox-row mt-1"><input type="checkbox" name="rr_manual" value="1"> Manual R:R</label>
+        </div>
+        <div class="form-group"><label for="realized_r_multiple">Realized R</label>
+          <input id="realized_r_multiple" name="realized_r_multiple" inputmode="decimal" value="{{ f.get('realized_r_multiple') or (t.realized_r_multiple if t and t.realized_r_multiple is not none else '') }}">
+          <label class="checkbox-row mt-1"><input type="checkbox" name="r_manual" value="1"> Manual R</label>
+        </div>
+        <div class="form-group"><label for="confidence_score">Confidence (1–10)</label><input type="number" min="1" max="10" id="confidence_score" name="confidence_score" value="{{ f.get('confidence_score') or (t.confidence_score if t and t.confidence_score is not none else '') }}"></div>
+        <div class="form-group"><label for="followed_plan">Followed plan</label>
+          <select id="followed_plan" name="followed_plan">
+            <option value="">—</option>
+            <option value="1" {% if (f.get('followed_plan') or (t.followed_plan if t else '')) in [True,'1',1] %}selected{% endif %}>Yes</option>
+            <option value="0" {% if (f.get('followed_plan') or (t.followed_plan if t else '')) in [False,'0',0] and (f.get('followed_plan') or t.followed_plan is not none) %}selected{% endif %}>No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card form-section">
+      <h3>Review</h3>
+      <div class="form-grid">
+        <div class="form-group full"><label for="mistake">Mistake</label><textarea id="mistake" name="mistake">{{ f.get('mistake') or (t.mistake if t and t.mistake else '') }}</textarea></div>
+        <div class="form-group full"><label for="lesson">Lesson</label><textarea id="lesson" name="lesson">{{ f.get('lesson') or (t.lesson if t and t.lesson else '') }}</textarea></div>
+        <div class="form-group"><label for="emotion_before">Emotion before</label><input id="emotion_before" name="emotion_before" value="{{ f.get('emotion_before') or (t.emotion_before if t and t.emotion_before else '') }}"></div>
+        <div class="form-group"><label for="emotion_after">Emotion after</label><input id="emotion_after" name="emotion_after" value="{{ f.get('emotion_after') or (t.emotion_after if t and t.emotion_after else '') }}"></div>
+        <div class="form-group full"><label for="screenshot_url">Screenshot URL</label><input id="screenshot_url" name="screenshot_url" type="url" value="{{ f.get('screenshot_url') or (t.screenshot_url if t and t.screenshot_url else '') }}"></div>
+      </div>
+    </div>
+
+    <div class="row gap-1">
+      <button type="submit" class="btn btn-primary">{{ 'Save Changes' if mode=='edit' else 'Create Trade' }}</button>
+      <a class="btn btn-secondary" href="/trades">Cancel</a>
+    </div>
+  </div>
+
+  <aside class="card live-summary" id="liveSummary">
+    <h3 style="margin-top:0">Live Summary</h3>
+    <div class="sum-row"><span>Market</span><strong id="sumMarket">—</strong></div>
+    <div class="sum-row"><span>Direction</span><strong id="sumDir">—</strong></div>
+    <div class="sum-row"><span>Risk distance</span><strong id="sumRiskDist">—</strong></div>
+    <div class="sum-row"><span>Reward distance</span><strong id="sumRewardDist">—</strong></div>
+    <div class="sum-row"><span>R:R</span><strong id="sumRR">—</strong></div>
+    <div class="sum-row"><span>Est. net P/L</span><strong id="sumNet">—</strong></div>
+    <div class="sum-row"><span>Suggested status</span><strong id="sumStatus">—</strong></div>
+    <p class="form-hint mt-2">Calculations are estimates. Stored net P/L is authoritative when supplied.</p>
+  </aside>
+</form>
+{% endblock %}
+{% block scripts %}<script src="/public/js/trades.js"></script>{% endblock %}

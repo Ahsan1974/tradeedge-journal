@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Trades — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2" style="flex-wrap:wrap">
+  <div>
+    <h2 style="margin:0">Trades</h2>
+    <p class="muted text-sm">{{ page_data.total }} trade(s)</p>
+  </div>
+  <div class="row gap-1" style="flex-wrap:wrap">
+    <form method="post" action="/trades/sync-mt5" class="row gap-1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-gold" id="syncMt5Btn">
+        <i data-lucide="refresh-cw"></i> Sync from MT5
+      </button>
+    </form>
+    <a class="btn btn-secondary" href="/trades/export?scope=all">Export All</a>
+    <a class="btn btn-ghost btn-sm" href="/trades/export?scope=xau">XAU</a>
+    <a class="btn btn-ghost btn-sm" href="/trades/export?scope=btc">BTC</a>
+    <a class="btn btn-ghost btn-sm" href="/trades/export?scope=month">Month</a>
+  </div>
+</div>
+<p class="muted text-sm mb-2">Closed XAUUSDm / BTCUSDm trades sync from your local Exness MT5 terminal. Older trades stay in the database so statistics are never reset.</p>
+
+<form class="filter-bar" method="get">
+  <div class="form-group"><label for="q">Search</label><input id="q" name="q" value="{{ filters.get('q','') }}" placeholder="Ticket, setup, notes…"></div>
+  <div class="form-group"><label for="market">Market</label>
+    <select id="market" name="market">
+      <option value="">All</option>
+      <option value="XAU/USD" {% if filters.get('market')=='XAU/USD' %}selected{% endif %}>XAU/USD</option>
+      <option value="BTC/USD" {% if filters.get('market')=='BTC/USD' %}selected{% endif %}>BTC/USD</option>
+    </select>
+  </div>
+  <div class="form-group"><label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">All</option>
+      {% for s in ['OPEN','WIN','LOSS','BREAKEVEN'] %}
+      <option value="{{ s }}" {% if filters.get('status')==s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group"><label for="direction">Direction</label>
+    <select id="direction" name="direction">
+      <option value="">All</option>
+      <option value="BUY" {% if filters.get('direction')=='BUY' %}selected{% endif %}>BUY</option>
+      <option value="SELL" {% if filters.get('direction')=='SELL' %}selected{% endif %}>SELL</option>
+    </select>
+  </div>
+  <div class="form-group"><label for="setup">Setup</label>
+    <select id="setup" name="setup"><option value="">All</option>{% for s in setups %}<option value="{{ s }}" {% if filters.get('setup')==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  </div>
+  <div class="form-group"><label for="timeframe">Timeframe</label>
+    <select id="timeframe" name="timeframe"><option value="">All</option>{% for t in timeframes %}<option value="{{ t }}" {% if filters.get('timeframe')==t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
+  </div>
+  <div class="form-group"><label for="session">Session</label>
+    <select id="session" name="session"><option value="">All</option>{% for s in sessions %}<option value="{{ s }}" {% if filters.get('session')==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  </div>
+  <div class="form-group"><label for="date_from">From</label><input type="date" id="date_from" name="date_from" value="{{ filters.get('date_from','') }}"></div>
+  <div class="form-group"><label for="date_to">To</label><input type="date" id="date_to" name="date_to" value="{{ filters.get('date_to','') }}"></div>
+  <div class="form-group"><label for="min_pnl">Min P/L</label><input id="min_pnl" name="min_pnl" value="{{ filters.get('min_pnl','') }}"></div>
+  <div class="form-group"><label for="max_pnl">Max P/L</label><input id="max_pnl" name="max_pnl" value="{{ filters.get('max_pnl','') }}"></div>
+  <div class="form-group"><label for="sort">Sort</label>
+    <select id="sort" name="sort">
+      {% for key,label in [('trade_date','Date'),('market','Market'),('profit_loss','P/L'),('lot_size','Lot size'),('risk_reward','R:R'),('holding_time','Holding')] %}
+      <option value="{{ key }}" {% if sort==key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group"><label for="order">Order</label>
+    <select id="order" name="order">
+      <option value="desc" {% if order=='desc' %}selected{% endif %}>Desc</option>
+      <option value="asc" {% if order=='asc' %}selected{% endif %}>Asc</option>
+    </select>
+  </div>
+  <div class="filter-actions">
+    <button class="btn btn-primary" type="submit">Apply</button>
+    <a class="btn btn-secondary" href="/trades">Clear</a>
+  </div>
+</form>
+
+<div class="card">
+  {% if page_data.items %}
+  <p class="mobile-scroll-hint">Scroll horizontally to see all columns</p>
+  <div class="table-wrap">
+    <table class="data-table {% if settings.table_density=='compact' %}compact{% endif %}">
+      <thead>
+        <tr>
+          <th>Date</th><th>Market</th><th>Dir</th><th>Entry</th><th>Exit</th><th>Lots</th>
+          <th>SL</th><th>TP</th><th>Pips</th><th>Net P/L</th><th>Status</th><th>Setup</th><th>R:R</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in page_data.items %}
+        <tr>
+          <td>{{ t.trade_date|dt }}</td>
+          <td><span class="badge {% if t.market=='XAU/USD' %}badge-xau{% else %}badge-btc{% endif %}">{{ t.market }}</span></td>
+          <td><span class="badge {{ t.direction|badge }}">{{ t.direction }}</span></td>
+          <td class="mono">{{ t.entry_price }}</td>
+          <td class="mono">{{ t.exit_price if t.exit_price is not none else '—' }}</td>
+          <td class="mono">{{ t.lot_size }}</td>
+          <td class="mono">{{ t.stop_loss if t.stop_loss is not none else '—' }}</td>
+          <td class="mono">{{ t.take_profit if t.take_profit is not none else '—' }}</td>
+          <td class="mono">{{ t.pips if t.pips is not none else '—' }}</td>
+          <td class="mono {{ t.net_profit_loss|pnl_class }}">{{ t.net_profit_loss|money(show_sign=True) }}</td>
+          <td><span class="badge {{ t.status|badge }}">{{ t.status }}</span></td>
+          <td>{% if t.setup %}<span class="badge badge-setup">{{ t.setup }}</span>{% else %}—{% endif %}</td>
+          <td class="mono">{{ t.risk_reward_ratio|ratio if t.risk_reward_ratio is not none else '—' }}</td>
+          <td class="table-actions">
+            <a class="btn btn-ghost btn-icon" href="/trades/{{ t.id }}" aria-label="View"><i data-lucide="eye"></i></a>
+            <a class="btn btn-ghost btn-icon" href="/trades/{{ t.id }}/edit" aria-label="Edit"><i data-lucide="pencil"></i></a>
+            <form method="post" action="/trades/{{ t.id }}/delete" class="js-confirm-delete" data-message="Delete trade #{{ t.id }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="btn btn-ghost btn-icon" type="submit" aria-label="Delete"><i data-lucide="trash-2"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  {% with title='No trades found', message='Sync closed trades from Exness MT5 (button above), or run the TradeEdge_ExportDeals.mq5 script then sync again.', action_url='/trades', action_label='Refresh' %}
+    {% include "components/empty_state.html" %}
+  {% endwith %}
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/public/js/trades.js"></script>{% endblock %}

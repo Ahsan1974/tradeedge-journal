@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Risk Management — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-2"><h2 style="margin:0">Risk Management</h2><p class="muted text-sm">Calculators and monitors for personal risk discipline. Not financial advice.</p></div>
+
+<div class="grid grid-3 mb-2">
+  <div class="card">
+    <h3>Risk Discipline Score</h3>
+    <div class="score-ring" style="--score: {{ risk_score.score }}">
+      <div class="score-inner">{{ risk_score.score }}</div>
+    </div>
+    <p class="text-sm muted mt-2">{{ risk_score.explanation }}</p>
+    <div class="stat-list mt-2">
+      {% for k,v in risk_score.components.items() %}
+      <div class="stat-row"><span>{{ k.replace('_',' ')|title }}</span><span>{{ v }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card" style="grid-column: span 2">
+    <h3>Daily Risk Monitor</h3>
+    <div class="grid grid-kpi">
+      <div class="metric-chip"><div class="label">Trades today</div><div class="value">{{ monitor.trades_today }}</div></div>
+      <div class="metric-chip"><div class="label">Today P/L</div><div class="value {{ monitor.today_pnl|pnl_class }}">{{ monitor.today_pnl|money(show_sign=True) }}</div></div>
+      <div class="metric-chip"><div class="label">Today risk</div><div class="value">{{ monitor.today_risk|money }}</div></div>
+      <div class="metric-chip"><div class="label">Losing streak</div><div class="value">{{ monitor.current_losing_streak }}</div></div>
+      <div class="metric-chip"><div class="label">Remaining loss</div><div class="value">{{ monitor.remaining_allowed_loss|money }}</div></div>
+      <div class="metric-chip"><div class="label">Remaining trades</div><div class="value">{{ monitor.remaining_allowed_trades }}</div></div>
+      <div class="metric-chip"><div class="label">Open risk</div><div class="value">{{ monitor.total_open_risk|money }} ({{ monitor.total_open_risk_pct }}%)</div></div>
+    </div>
+    {% if monitor.warnings %}
+    <ul class="warning-list mt-2">{% for w in monitor.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+    {% else %}
+    <p class="muted text-sm mt-2">No risk warnings right now.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Position Size Calculator</h3>
+    <form id="posSizeForm" class="form-grid">
+      <div class="form-group"><label for="ps_market">Market</label>
+        <select id="ps_market" name="market">
+          <option value="XAU/USD">XAU/USD</option>
+          <option value="BTC/USD">BTC/USD</option>
+        </select>
+      </div>
+      <div class="form-group"><label for="ps_balance">Account balance</label><input id="ps_balance" value="{{ calc_defaults.account_balance }}"></div>
+      <div class="form-group"><label for="ps_risk">Risk %</label><input id="ps_risk" value="{{ calc_defaults.risk_percent }}"></div>
+      <div class="form-group"><label for="ps_entry">Entry</label><input id="ps_entry" value=""></div>
+      <div class="form-group"><label for="ps_sl">Stop loss</label><input id="ps_sl" value=""></div>
+      <div class="form-group"><label for="ps_tick">Tick size</label><input id="ps_tick" value="{{ calc_defaults.tick_size }}"></div>
+      <div class="form-group"><label for="ps_tickval">Tick value / lot</label><input id="ps_tickval" value="{{ calc_defaults.tick_value_per_lot }}"></div>
+      <div class="form-group"><label for="ps_contract">Contract size</label><input id="ps_contract" value="{{ calc_defaults.contract_size }}"></div>
+      <div class="form-group full"><button type="submit" class="btn btn-primary">Calculate</button></div>
+    </form>
+    <div id="posSizeResult" class="stat-list mt-2"></div>
+    <p class="form-hint">Symbol specs are broker-dependent. Update them in Settings.</p>
+  </div>
+
+  <div class="card">
+    <h3>Risk-to-Reward Calculator</h3>
+    <form id="rrForm" class="form-grid">
+      <div class="form-group"><label for="rr_dir">Direction</label>
+        <select id="rr_dir"><option>BUY</option><option>SELL</option></select>
+      </div>
+      <div class="form-group"><label for="rr_entry">Entry</label><input id="rr_entry"></div>
+      <div class="form-group"><label for="rr_sl">Stop loss</label><input id="rr_sl"></div>
+      <div class="form-group"><label for="rr_tp">Take profit</label><input id="rr_tp"></div>
+      <div class="form-group full"><button type="submit" class="btn btn-primary">Calculate</button></div>
+    </form>
+    <div id="rrBar" class="rr-bar mt-2" hidden><div class="risk" id="rrRiskSeg" style="width:50%"></div><div class="reward" id="rrRewardSeg" style="width:50%"></div></div>
+    <div id="rrResult" class="stat-list mt-2"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/public/js/risk.js"></script>{% endblock %}

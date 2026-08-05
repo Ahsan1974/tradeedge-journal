@@ -1,0 +1,57 @@
+/* Dashboard-specific layout */
+.dashboard-hero-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.secondary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.secondary-metrics .metric-chip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+}
+
+.secondary-metrics .metric-chip .label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.secondary-metrics .metric-chip .value {
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.charts-grid .span-2 {
+  grid-column: span 2;
+}
+
+.market-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.sidebar-quick {
+  margin-top: 0.75rem;
+}
+
+.sidebar-quick .btn {
+  width: 100%;
+}

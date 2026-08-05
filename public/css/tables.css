@@ -1,0 +1,12 @@
+/* Tables density */
+table.data-table.compact th,
+table.data-table.compact td {
+  padding: 0.45rem 0.65rem;
+}
+
+.mobile-scroll-hint {
+  display: none;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}

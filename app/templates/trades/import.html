@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Import Trades — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2">
+  <div>
+    <h2 style="margin:0">Import Trades</h2>
+    <p class="muted text-sm">Upload CSV, preview validation, then confirm. Nothing is imported until you confirm.</p>
+  </div>
+  <a class="btn btn-secondary" href="/trades/import/template">Download template</a>
+</div>
+
+<div class="card">
+  <form method="post" action="/trades/import/preview" enctype="multipart/form-data" id="importForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="dropzone" id="dropzone" for="file">
+      <i data-lucide="upload-cloud" style="width:40px;height:40px;opacity:0.5"></i>
+      <p><strong>Drop CSV here</strong> or click to browse</p>
+      <p class="form-hint">Accepts TradeEdge template or common MT5 history CSV. Max 2 MB.</p>
+      <input type="file" id="file" name="file" accept=".csv,text/csv" required class="sr-only">
+    </label>
+    <div class="mt-2 row gap-1">
+      <button type="submit" class="btn btn-primary">Upload &amp; Preview</button>
+      <a class="btn btn-secondary" href="/trades">Cancel</a>
+    </div>
+  </form>
+  <div class="mt-2">
+    <p class="text-sm muted">Also see sample files in <code>data/sample_trades.csv</code> and <code>data/sample_mt5_history.csv</code>.</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/public/js/trades.js"></script>{% endblock %}

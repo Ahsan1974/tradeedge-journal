@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Trade #{{ trade.id }} — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2" style="flex-wrap:wrap">
+  <div>
+    <h2 style="margin:0">Trade #{{ trade.id }}</h2>
+    <p class="muted text-sm">{{ trade.trade_date|dt }} · <span class="{{ trade.market|market_class }}">{{ trade.market }}</span></p>
+  </div>
+  <div class="row gap-1">
+    {% if prev_trade %}<a class="btn btn-secondary btn-sm" href="/trades/{{ prev_trade.id }}">← Previous</a>{% endif %}
+    {% if next_trade %}<a class="btn btn-secondary btn-sm" href="/trades/{{ next_trade.id }}">Next →</a>{% endif %}
+    <a class="btn btn-primary" href="/trades/{{ trade.id }}/edit">Edit</a>
+    <form method="post" action="/trades/{{ trade.id }}/delete" class="js-confirm-delete" data-message="Delete this trade permanently?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="grid grid-3 mb-2">
+  <div class="kpi-card {{ trade.net_profit_loss|pnl_class }}">
+    <div class="kpi-label"><span>Net P/L</span></div>
+    <div class="kpi-value">{{ trade.net_profit_loss|money(show_sign=True) }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><span>Status</span></div>
+    <div class="kpi-value"><span class="badge {{ trade.status|badge }}">{{ trade.status }}</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><span>Holding</span></div>
+    <div class="kpi-value" style="font-size:1.1rem">{{ trade.holding_seconds|holding }}</div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Entry &amp; Exit</h3>
+    <div class="stat-list">
+      <div class="stat-row"><span>Direction</span><span class="badge {{ trade.direction|badge }}">{{ trade.direction }}</span></div>
+      <div class="stat-row"><span>Entry</span><span>{{ trade.entry_price }}</span></div>
+      <div class="stat-row"><span>Exit</span><span>{{ trade.exit_price if trade.exit_price is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Stop loss</span><span>{{ trade.stop_loss if trade.stop_loss is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Take profit</span><span>{{ trade.take_profit if trade.take_profit is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Lot size</span><span>{{ trade.lot_size }}</span></div>
+      <div class="stat-row"><span>Pips</span><span>{{ trade.pips if trade.pips is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Session</span><span>{{ trade.trading_session or '—' }}</span></div>
+      <div class="stat-row"><span>Timeframe</span><span>{{ trade.timeframe or '—' }}</span></div>
+      <div class="stat-row"><span>Setup</span><span>{{ trade.setup or '—' }}</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Risk &amp; Result</h3>
+    <div class="stat-list">
+      <div class="stat-row"><span>Gross P/L</span><span>{{ trade.profit_loss|money if trade.profit_loss is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Commission</span><span>{{ trade.commission|money }}</span></div>
+      <div class="stat-row"><span>Swap</span><span>{{ trade.swap|money }}</span></div>
+      <div class="stat-row"><span>Fees</span><span>{{ trade.fees|money }}</span></div>
+      <div class="stat-row"><span>Risk amount</span><span>{{ trade.risk_amount|money if trade.risk_amount is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Planned reward</span><span>{{ trade.planned_reward|money if trade.planned_reward is not none else '—' }}</span></div>
+      <div class="stat-row"><span>R:R</span><span>{{ trade.risk_reward_ratio|ratio if trade.risk_reward_ratio is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Realized R</span><span>{{ trade.realized_r_multiple|ratio if trade.realized_r_multiple is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Balance after</span><span>{{ trade.account_balance_after|money if trade.account_balance_after is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Ticket</span><span>{{ trade.external_ticket or '—' }}</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Plan &amp; Reasoning</h3>
+    <p class="text-sm"><strong>Entry:</strong> {{ trade.entry_reason or '—' }}</p>
+    <p class="text-sm"><strong>Exit:</strong> {{ trade.exit_reason or '—' }}</p>
+    <p class="text-sm"><strong>Followed plan:</strong> {% if trade.followed_plan == True %}Yes{% elif trade.followed_plan == False %}No{% else %}—{% endif %}</p>
+    <p class="text-sm"><strong>Confidence:</strong> {{ trade.confidence_score or '—' }}</p>
+  </div>
+  <div class="card">
+    <h3>Review</h3>
+    <p class="text-sm"><strong>Mistake:</strong> {{ trade.mistake or '—' }}</p>
+    <p class="text-sm"><strong>Lesson:</strong> {{ trade.lesson or '—' }}</p>
+    <p class="text-sm"><strong>Emotion before:</strong> {{ trade.emotion_before or '—' }}</p>
+    <p class="text-sm"><strong>Emotion after:</strong> {{ trade.emotion_after or '—' }}</p>
+    {% if trade.screenshot_url %}<p class="text-sm"><a href="{{ trade.screenshot_url }}" target="_blank" rel="noopener">Open screenshot</a></p>{% endif %}
+  </div>
+</div>
+
+{% if trade.journal_entries %}
+<div class="card mt-2">
+  <h3>Linked Journal</h3>
+  {% for e in trade.journal_entries %}
+  <div class="journal-card mb-2">
+    <strong>{{ e.title }}</strong>
+    <p class="text-sm muted">{{ e.entry_date|d }}</p>
+    <p class="text-sm">{{ e.notes or '' }}</p>
+    <a class="btn btn-ghost btn-sm" href="/journal/{{ e.id }}/edit">Edit entry</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

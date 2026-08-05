@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Import Preview — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-2">
+  <h2 style="margin:0">Import Preview</h2>
+  <p class="muted text-sm">Format: {{ preview.format }} · Total {{ preview.total }} · Valid {{ preview.valid_count }} · Invalid {{ preview.invalid_count }} · Duplicates {{ preview.duplicate_count }}</p>
+</div>
+
+<div class="card mb-2">
+  <div class="table-wrap">
+    <table class="data-table compact">
+      <thead>
+        <tr><th>Row</th><th>Date</th><th>Market</th><th>Dir</th><th>Entry</th><th>Net</th><th>Status</th><th>Valid</th><th>Errors</th></tr>
+      </thead>
+      <tbody>
+        {% for row in preview.rows %}
+        <tr>
+          <td>{{ row.row }}</td>
+          <td class="mono">{{ row.data.trade_date }}</td>
+          <td>{{ row.data.market }}</td>
+          <td>{{ row.data.direction }}</td>
+          <td class="mono">{{ row.data.entry_price }}</td>
+          <td class="mono">{{ row.data.net_profit_loss }}</td>
+          <td>{{ row.data.status }}</td>
+          <td>{% if row.valid %}<span class="badge badge-win">OK</span>{% else %}<span class="badge badge-loss">Fail</span>{% endif %}</td>
+          <td class="text-sm">{% if row.errors %}{{ row.errors|join('; ') }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row gap-1">
+  <form method="post" action="/trades/import/confirm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="skip_invalid" value="1">
+    <button type="submit" class="btn btn-primary" {% if preview.valid_count == 0 %}disabled{% endif %}>
+      Import {{ preview.valid_count }} valid row(s)
+    </button>
+  </form>
+  <form method="post" action="/trades/import/cancel">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn btn-secondary">Cancel</button>
+  </form>
+</div>
+{% endblock %}

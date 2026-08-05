@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Error — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <i data-lucide="alert-octagon"></i>
+  <h3>Something went wrong</h3>
+  <p>An unexpected error occurred. Please try again or return to the dashboard.</p>
+  <a class="btn btn-primary" href="/dashboard">Back to Dashboard</a>
+</div>
+{% endblock %}

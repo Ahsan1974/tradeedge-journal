@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Journal — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2">
+  <div><h2 style="margin:0">Trading Journal</h2><p class="muted text-sm">Notes, lessons, and emotional reviews</p></div>
+  <a class="btn btn-primary" href="/journal/new"><i data-lucide="plus"></i> New Entry</a>
+</div>
+
+<div class="grid grid-kpi mb-2">
+  <div class="kpi-card"><div class="kpi-label"><span>Plan followed</span></div><div class="kpi-value">{{ analytics.followed_plan_pct|pct if analytics.followed_plan_pct is not none else '—' }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Top mistake</span></div><div class="kpi-value" style="font-size:0.95rem">{{ analytics.most_frequent_mistake or '—' }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Top setup</span></div><div class="kpi-value" style="font-size:0.95rem">{{ analytics.most_frequent_setup or '—' }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Common emotion</span></div><div class="kpi-value" style="font-size:0.95rem">{{ analytics.most_common_emotion or '—' }}</div></div>
+</div>
+
+{% if analytics.performance_followed or analytics.performance_not_followed %}
+<div class="grid grid-2 mb-2">
+  <div class="card">
+    <h3>When plan followed</h3>
+    {% if analytics.performance_followed %}
+    <div class="stat-list">
+      <div class="stat-row"><span>Net P/L</span><span class="{{ analytics.performance_followed.net_pnl|pnl_class }}">{{ analytics.performance_followed.net_pnl|money(show_sign=True) }}</span></div>
+      <div class="stat-row"><span>Win rate</span><span>{{ analytics.performance_followed.win_rate|pct if analytics.performance_followed.win_rate is not none else '—' }}</span></div>
+    </div>
+    {% else %}<p class="muted">No data</p>{% endif %}
+  </div>
+  <div class="card">
+    <h3>When plan not followed</h3>
+    {% if analytics.performance_not_followed %}
+    <div class="stat-list">
+      <div class="stat-row"><span>Net P/L</span><span class="{{ analytics.performance_not_followed.net_pnl|pnl_class }}">{{ analytics.performance_not_followed.net_pnl|money(show_sign=True) }}</span></div>
+      <div class="stat-row"><span>Win rate</span><span>{{ analytics.performance_not_followed.win_rate|pct if analytics.performance_not_followed.win_rate is not none else '—' }}</span></div>
+    </div>
+    {% else %}<p class="muted">No data</p>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<form class="filter-bar" method="get">
+  <div class="form-group"><label for="q">Search</label><input id="q" name="q" value="{{ filters.get('q','') }}"></div>
+  <div class="form-group"><label for="market">Market</label>
+    <select name="market" id="market"><option value="">All</option><option value="XAU/USD" {% if filters.get('market')=='XAU/USD' %}selected{% endif %}>XAU/USD</option><option value="BTC/USD" {% if filters.get('market')=='BTC/USD' %}selected{% endif %}>BTC/USD</option></select>
+  </div>
+  <div class="form-group"><label for="setup">Setup</label>
+    <select name="setup" id="setup"><option value="">All</option>{% for s in setups %}<option value="{{ s }}" {% if filters.get('setup')==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  </div>
+  <div class="form-group"><label for="tags">Tags</label><input id="tags" name="tags" value="{{ filters.get('tags','') }}"></div>
+  <div class="form-group"><label for="followed_plan">Plan</label>
+    <select name="followed_plan" id="followed_plan">
+      <option value="">All</option>
+      <option value="1" {% if filters.get('followed_plan')=='1' %}selected{% endif %}>Followed</option>
+      <option value="0" {% if filters.get('followed_plan')=='0' %}selected{% endif %}>Not followed</option>
+    </select>
+  </div>
+  <div class="form-group"><label for="date_from">From</label><input type="date" name="date_from" id="date_from" value="{{ filters.get('date_from','') }}"></div>
+  <div class="form-group"><label for="date_to">To</label><input type="date" name="date_to" id="date_to" value="{{ filters.get('date_to','') }}"></div>
+  <div class="filter-actions"><button class="btn btn-primary" type="submit">Apply</button><a class="btn btn-secondary" href="/journal">Clear</a></div>
+</form>
+
+{% if page_data.items %}
+<div class="stack">
+  {% for e in page_data.items %}
+  <article class="journal-card">
+    <div class="row-between" style="flex-wrap:wrap">
+      <div>
+        <h3>{{ e.title }}</h3>
+        <p class="muted text-sm" style="margin:0">{{ e.entry_date|d }}
+          {% if e.market %} · <span class="{{ e.market|market_class }}">{{ e.market }}</span>{% endif %}
+          {% if e.setup %} · {{ e.setup }}{% endif %}
+        </p>
+      </div>
+      <div class="table-actions">
+        <a class="btn btn-ghost btn-sm" href="/journal/{{ e.id }}/edit">Edit</a>
+        <form method="post" action="/journal/{{ e.id }}/delete" class="js-confirm-delete" data-message="Delete this journal entry?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% if e.tags %}<div class="mt-1">{% for tag in e.tags.split(',') %}<span class="tag">{{ tag.strip() }}</span>{% endfor %}</div>{% endif %}
+    {% if e.notes %}<p class="text-sm mt-1">{{ e.notes }}</p>{% endif %}
+    {% if e.mistakes %}<p class="text-sm"><strong>Mistakes:</strong> {{ e.mistakes }}</p>{% endif %}
+    {% if e.lesson %}<p class="text-sm"><strong>Lesson:</strong> {{ e.lesson }}</p>{% endif %}
+    <div class="row gap-1 mt-1 text-sm muted">
+      {% if e.emotional_state %}<span>Emotion: {{ e.emotional_state }}</span>{% endif %}
+      {% if e.followed_plan == True %}<span class="badge badge-win">Plan followed</span>{% elif e.followed_plan == False %}<span class="badge badge-loss">Plan broken</span>{% endif %}
+      {% if e.trade_id %}<a href="/trades/{{ e.trade_id }}">Linked trade #{{ e.trade_id }}</a>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% include "components/pagination.html" %}
+{% else %}
+{% with title='No journal entries', message='Start capturing your process notes.', action_url='/journal/new', action_label='New Entry' %}
+  {% include "components/empty_state.html" %}
+{% endwith %}
+{% endif %}
+{% endblock %}

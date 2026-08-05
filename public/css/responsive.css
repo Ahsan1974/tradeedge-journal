@@ -1,0 +1,56 @@
+/* Responsive */
+@media (max-width: 1100px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid .span-2 { grid-column: span 1; }
+  .market-panels { grid-template-columns: 1fr; }
+  .form-layout { grid-template-columns: 1fr; }
+  .live-summary { position: static; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-wrap {
+    margin-left: 0;
+  }
+  .menu-toggle {
+    display: inline-flex;
+  }
+  .grid-2,
+  .grid-3,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .content {
+    padding: 1rem;
+  }
+  .mobile-scroll-hint {
+    display: block;
+  }
+  .profile-chip .profile-name {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .grid-kpi,
+  .grid-4,
+  .cal-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cal-day {
+    min-height: 64px;
+    padding: 0.3rem;
+  }
+  .cal-day .day-pnl {
+    font-size: 0.65rem;
+  }
+  .filter-bar .form-group {
+    min-width: 100%;
+  }
+}

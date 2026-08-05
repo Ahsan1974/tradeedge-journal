@@ -1,0 +1,64 @@
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-brand">
+    <a class="logo" href="/dashboard">
+      <span class="logo-mark" aria-hidden="true">TE</span>
+      <span>
+        <h1>{{ app_name }}</h1>
+        <p>{{ app_subtitle }}</p>
+      </span>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item {% if active_page == 'dashboard' %}active{% endif %}" href="/dashboard">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </a>
+    <a class="nav-item {% if active_page == 'trades' %}active{% endif %}" href="/trades">
+      <i data-lucide="activity"></i> Trades
+    </a>
+    <a class="nav-item {% if active_page == 'journal' %}active{% endif %}" href="/journal">
+      <i data-lucide="book-open"></i> Journal
+    </a>
+    <a class="nav-item {% if active_page == 'analytics' %}active{% endif %}" href="/analytics">
+      <i data-lucide="bar-chart-3"></i> Analytics
+    </a>
+    <a class="nav-item {% if active_page == 'risk' %}active{% endif %}" href="/risk-management">
+      <i data-lucide="shield"></i> Risk Management
+    </a>
+    <a class="nav-item {% if active_page == 'calendar' %}active{% endif %}" href="/calendar">
+      <i data-lucide="calendar"></i> Calendar
+    </a>
+    <a class="nav-item {% if active_page == 'settings' %}active{% endif %}" href="/settings">
+      <i data-lucide="settings"></i> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-stat">
+      <span>Balance</span>
+      <strong>{{ sidebar_balance|money if sidebar_balance is defined else '—' }}</strong>
+    </div>
+    <div class="sidebar-stat">
+      <span>Month P/L</span>
+      <strong class="{{ (sidebar_month_pnl|default(0))|pnl_class }}">
+        {{ sidebar_month_pnl|money(show_sign=True) if sidebar_month_pnl is defined else '—' }}
+      </strong>
+    </div>
+    <div class="sidebar-stat">
+      <span>Market</span>
+      <strong class="market-dot">{{ market_status|default('Open') }}</strong>
+    </div>
+    <div class="sidebar-stat">
+      <span>Pakistan</span>
+      <strong>{{ pakistan_time.strftime('%H:%M') if pakistan_time is defined else '—' }}</strong>
+    </div>
+    <div class="sidebar-quick">
+      <form method="post" action="/trades/sync-mt5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-gold btn-sm" style="width:100%">
+          <i data-lucide="refresh-cw"></i> Sync from MT5
+        </button>
+      </form>
+    </div>
+  </div>
+</aside>

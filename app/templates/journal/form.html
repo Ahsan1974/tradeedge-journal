@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if mode=='edit' else 'New' }} Journal — {{ app_name }}{% endblock %}
+{% block content %}
+{% set f = form_data if form_data else {} %}
+{% set e = entry %}
+<div class="row-between mb-2">
+  <h2 style="margin:0">{{ 'Edit Entry' if mode=='edit' else 'New Journal Entry' }}</h2>
+  <a class="btn btn-secondary" href="/journal">Back</a>
+</div>
+{% if errors %}<div class="error-summary" role="alert"><ul>{% for err in errors %}<li>{{ err }}</li>{% endfor %}</ul></div>{% endif %}
+<form method="post" class="card" style="max-width:720px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="form-grid">
+    <div class="form-group full"><label for="title">Title</label><input id="title" name="title" required value="{{ f.get('title') or (e.title if e else '') }}"></div>
+    <div class="form-group"><label for="entry_date">Date</label><input type="date" id="entry_date" name="entry_date" required value="{{ f.get('entry_date') or (e.entry_date.isoformat() if e and e.entry_date else '') }}"></div>
+    <div class="form-group"><label for="market">Market</label>
+      <select id="market" name="market"><option value="">—</option>
+        <option value="XAU/USD" {% if (f.get('market') or (e.market if e else ''))=='XAU/USD' %}selected{% endif %}>XAU/USD</option>
+        <option value="BTC/USD" {% if (f.get('market') or (e.market if e else ''))=='BTC/USD' %}selected{% endif %}>BTC/USD</option>
+      </select>
+    </div>
+    <div class="form-group"><label for="setup">Setup</label>
+      <select id="setup" name="setup"><option value="">—</option>{% for s in setups %}<option value="{{ s }}" {% if (f.get('setup') or (e.setup if e else ''))==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+    </div>
+    <div class="form-group"><label for="trade_id">Linked trade</label>
+      <select id="trade_id" name="trade_id"><option value="">None</option>
+        {% for t in trades %}
+        <option value="{{ t.id }}" {% if (f.get('trade_id')|string if f.get('trade_id') else (e.trade_id|string if e and e.trade_id else '')) == t.id|string %}selected{% endif %}>
+          #{{ t.id }} {{ t.market }} {{ t.trade_date|dt }} ({{ t.status }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group"><label for="followed_plan">Followed plan</label>
+      <select id="followed_plan" name="followed_plan">
+        <option value="">—</option>
+        <option value="1" {% if (f.get('followed_plan') or (e.followed_plan if e else '')) in [True,'1',1] %}selected{% endif %}>Yes</option>
+        <option value="0" {% if e and e.followed_plan == False %}selected{% endif %}>No</option>
+      </select>
+    </div>
+    <div class="form-group"><label for="emotional_state">Emotional state</label><input id="emotional_state" name="emotional_state" value="{{ f.get('emotional_state') or (e.emotional_state if e and e.emotional_state else '') }}"></div>
+    <div class="form-group"><label for="tags">Tags (comma-separated)</label><input id="tags" name="tags" value="{{ f.get('tags') or (e.tags if e and e.tags else '') }}"></div>
+    <div class="form-group full"><label for="notes">Notes</label><textarea id="notes" name="notes">{{ f.get('notes') or (e.notes if e and e.notes else '') }}</textarea></div>
+    <div class="form-group full"><label for="mistakes">Mistakes</label><textarea id="mistakes" name="mistakes">{{ f.get('mistakes') or (e.mistakes if e and e.mistakes else '') }}</textarea></div>
+    <div class="form-group full"><label for="lesson">Lesson</label><textarea id="lesson" name="lesson">{{ f.get('lesson') or (e.lesson if e and e.lesson else '') }}</textarea></div>
+  </div>
+  <div class="row gap-1 mt-2">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a class="btn btn-secondary" href="/journal">Cancel</a>
+  </div>
+</form>
+{% endblock %}

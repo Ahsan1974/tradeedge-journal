@@ -1,0 +1,12 @@
+<div class="empty-state">
+  {% if icon %}
+  <i data-lucide="{{ icon }}"></i>
+  {% else %}
+  <i data-lucide="inbox"></i>
+  {% endif %}
+  <h3>{{ title|default('Nothing here yet') }}</h3>
+  <p>{{ message|default('When you add data, it will appear here.') }}</p>
+  {% if action_url %}
+  <a class="btn btn-primary" href="{{ action_url }}">{{ action_label|default('Get started') }}</a>
+  {% endif %}
+</div>

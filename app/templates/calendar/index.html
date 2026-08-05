@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Calendar — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="cal-nav">
+  <a class="btn btn-secondary" href="/calendar?year={{ prev.year }}&month={{ prev.month }}" aria-label="Previous month">← Prev</a>
+  <h2 style="margin:0">{{ cal.month_name }} {{ cal.year }}</h2>
+  <a class="btn btn-secondary" href="/calendar?year={{ next.year }}&month={{ next.month }}" aria-label="Next month">Next →</a>
+</div>
+
+<div class="cal-summary">
+  <div class="kpi-card {{ cal.summary.month_pnl|pnl_class }}"><div class="kpi-label"><span>Month P/L</span></div><div class="kpi-value">{{ cal.summary.month_pnl|money(show_sign=True) }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Profitable days</span></div><div class="kpi-value">{{ cal.summary.profitable_days }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Losing days</span></div><div class="kpi-value">{{ cal.summary.losing_days }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Best day</span></div><div class="kpi-value" style="font-size:0.9rem">{% if cal.summary.best_day %}{{ cal.summary.best_day.date }} · {{ cal.summary.best_day.pnl|money(show_sign=True) }}{% else %}—{% endif %}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Worst day</span></div><div class="kpi-value" style="font-size:0.9rem">{% if cal.summary.worst_day %}{{ cal.summary.worst_day.date }} · {{ cal.summary.worst_day.pnl|money(show_sign=True) }}{% else %}—{% endif %}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Avg daily</span></div><div class="kpi-value">{{ cal.summary.avg_daily_pnl|money(show_sign=True) if cal.summary.avg_daily_pnl is not none else '—' }}</div></div>
+  <div class="kpi-card"><div class="kpi-label"><span>Trades</span></div><div class="kpi-value">{{ cal.summary.total_trades }}</div></div>
+</div>
+
+<div class="card">
+  <div class="cal-weekdays">
+    {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<span>{{ d }}</span>{% endfor %}
+  </div>
+  <div class="cal-grid">
+    {% for week in cal.cells %}
+    <div class="cal-week">
+      {% for day in week %}
+        {% if day.in_month %}
+        <a class="cal-day {{ day.tone }}" href="/calendar/{{ day.date }}">
+          <span class="day-num">{{ day.day }}</span>
+          {% if day.pnl is not none %}
+          <span class="day-pnl {{ day.pnl|pnl_class }}">{{ day.pnl|money(show_sign=True) }}</span>
+          <span class="day-count">{{ day.trades }} trade{{ 's' if day.trades != 1 else '' }}{% if day.wins or day.losses %} · {{ day.wins }}W/{{ day.losses }}L{% endif %}</span>
+          {% else %}
+          <span class="day-count muted">—</span>
+          {% endif %}
+        </a>
+        {% else %}
+        <div class="cal-day outside"><span class="day-num">{{ day.day }}</span></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/public/js/calendar.js"></script>{% endblock %}

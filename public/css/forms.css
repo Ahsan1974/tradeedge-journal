@@ -1,0 +1,37 @@
+/* Forms extras */
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.live-summary {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1rem);
+}
+
+.live-summary .sum-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-row input {
+  width: 16px;
+  height: 16px;
+}
+
+.inline-fields {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}

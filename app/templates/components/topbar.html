@@ -1,0 +1,18 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Open navigation menu">
+      <i data-lucide="menu"></i>
+    </button>
+    <div>
+      <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+      <p class="page-subtitle">{% block page_subtitle %}{{ app_subtitle }}{% endblock %}</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    {% block topbar_actions %}{% endblock %}
+    <div class="profile-chip" title="{{ profile_name }}">
+      <span class="avatar" aria-hidden="true">AT</span>
+      <span class="profile-name text-sm">{{ profile_name }}</span>
+    </div>
+  </div>
+</header>

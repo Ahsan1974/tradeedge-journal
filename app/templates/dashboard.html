@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2" style="flex-wrap:wrap">
+  <div>
+    <h2 style="margin:0;font-size:1.25rem">Performance Overview</h2>
+    <p class="muted text-sm" style="margin:0.25rem 0 0">Filtered analytics for your XAU/USD &amp; BTC/USD journal</p>
+  </div>
+  <div class="dashboard-hero-actions">
+    <form method="post" action="/trades/sync-mt5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-gold"><i data-lucide="refresh-cw"></i> Sync from MT5</button>
+    </form>
+    <a class="btn btn-secondary" href="/trades">View Trades</a>
+  </div>
+</div>
+
+<form class="filter-bar" method="get" action="/dashboard">
+  <div class="form-group">
+    <label for="period">Period</label>
+    <select id="period" name="period">
+      {% set p = filters.period %}
+      <option value="today" {% if p=='today' %}selected{% endif %}>Today</option>
+      <option value="7d" {% if p=='7d' %}selected{% endif %}>Last 7 days</option>
+      <option value="30d" {% if p=='30d' %}selected{% endif %}>Last 30 days</option>
+      <option value="month" {% if p=='month' %}selected{% endif %}>Current month</option>
+      <option value="prev_month" {% if p=='prev_month' %}selected{% endif %}>Previous month</option>
+      <option value="year" {% if p=='year' %}selected{% endif %}>Current year</option>
+      <option value="all" {% if p=='all' %}selected{% endif %}>All time</option>
+      <option value="custom" {% if p=='custom' %}selected{% endif %}>Custom</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="start">Start</label>
+    <input type="date" id="start" name="start" value="{{ filters.start or '' }}">
+  </div>
+  <div class="form-group">
+    <label for="end">End</label>
+    <input type="date" id="end" name="end" value="{{ filters.end or '' }}">
+  </div>
+  <div class="form-group">
+    <label for="market">Market</label>
+    <select id="market" name="market">
+      <option value="ALL" {% if filters.market_filter=='ALL' %}selected{% endif %}>All Markets</option>
+      <option value="XAU/USD" {% if filters.market_filter=='XAU/USD' %}selected{% endif %}>XAU/USD</option>
+      <option value="BTC/USD" {% if filters.market_filter=='BTC/USD' %}selected{% endif %}>BTC/USD</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="setup">Setup</label>
+    <select id="setup" name="setup">
+      <option value="ALL">All Setups</option>
+      {% for s in setups %}
+      <option value="{{ s }}" {% if filters.setup_filter==s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="session">Session</label>
+    <select id="session" name="session">
+      <option value="ALL">All Sessions</option>
+      {% for s in sessions %}
+      <option value="{{ s }}" {% if filters.session_filter==s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">Apply Filters</button>
+    <a class="btn btn-secondary" href="/dashboard">Clear</a>
+  </div>
+</form>
+
+<div class="grid grid-kpi mb-2 stagger">
+  {% set cards = [
+    ('Gross Profit', kpis.gross_profit, 'trending-up'),
+    ('Gross Loss', kpis.gross_loss, 'trending-down'),
+    ('Net P/L', kpis.net_pnl, 'wallet'),
+    ('Win Rate', kpis.win_rate, 'target'),
+    ('Total Trades', kpis.total_trades, 'list'),
+    ('Avg R:R', kpis.avg_rr, 'scale'),
+    ('Best Trade', kpis.best_trade, 'trophy'),
+    ('Worst Trade', kpis.worst_trade, 'alert-triangle'),
+    ('Current Month P/L', kpis.month_pnl, 'calendar')
+  ] %}
+  {% for label, m, icon in cards %}
+  <div class="kpi-card {{ m.tone }}">
+    <div class="kpi-label"><span>{{ label }}</span><span class="kpi-icon"><i data-lucide="{{ icon }}"></i></span></div>
+    <div class="kpi-value">{{ m.display }}</div>
+    {% if m.change_label %}<div class="kpi-change">{{ m.change_label }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="charts-grid mb-2 stagger" id="dashboardCharts"
+     data-period="{{ filters.period }}"
+     data-market="{{ filters.market_filter }}"
+     data-setup="{{ filters.setup_filter }}"
+     data-session="{{ filters.session_filter }}"
+     data-start="{{ filters.start or '' }}"
+     data-end="{{ filters.end or '' }}">
+  <div class="card span-2"><div class="card-header"><h3>Cumulative P/L</h3></div><div class="chart-box"><canvas id="chartCumulative"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Win / Loss / BE</h3></div><div class="chart-box sm"><canvas id="chartDistribution"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Trades by Weekday</h3></div><div class="chart-box sm"><canvas id="chartFrequency"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Daily P/L</h3></div><div class="chart-box sm"><canvas id="chartDaily"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Monthly P/L</h3></div><div class="chart-box sm"><canvas id="chartMonthly"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>XAU vs BTC</h3></div><div class="chart-box sm"><canvas id="chartMarket"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Profit by Setup</h3></div><div class="chart-box sm"><canvas id="chartSetup"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Profit by Session</h3></div><div class="chart-box sm"><canvas id="chartSession"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Win Rate by Timeframe</h3></div><div class="chart-box sm"><canvas id="chartTimeframe"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Drawdown</h3></div><div class="chart-box sm"><canvas id="chartDrawdown"></canvas></div></div>
+</div>
+
+<div class="card mb-2">
+  <div class="card-header"><h3>Secondary Metrics</h3></div>
+  <div class="secondary-metrics">
+    {% set secs = [
+      ('Avg Holding', secondary.avg_holding),
+      ('Max Drawdown', secondary.max_drawdown.display),
+      ('Max DD %', secondary.max_drawdown_pct.display),
+      ('Expectancy', secondary.expectancy.display),
+      ('Avg Risk', secondary.avg_risk.display),
+      ('Profit Factor', secondary.profit_factor.display),
+      ('Max Win Streak', secondary.max_win_streak),
+      ('Max Loss Streak', secondary.max_loss_streak),
+      ('Avg Win', secondary.avg_win.display),
+      ('Avg Loss', secondary.avg_loss.display),
+      ('Payoff Ratio', secondary.payoff_ratio.display),
+      ('Breakeven Rate', secondary.breakeven_rate.display),
+      ('Longest Hold', secondary.longest_holding),
+      ('Shortest Hold', secondary.shortest_holding),
+      ('Total Costs', secondary.total_costs.display),
+      ('Avg R Multiple', secondary.avg_r_multiple.display)
+    ] %}
+    {% for label, val in secs %}
+    <div class="metric-chip"><div class="label">{{ label }}</div><div class="value">{{ val if val is not none else '—' }}</div></div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if better_market %}
+<div class="compare-banner">Currently stronger market in this filter: <strong class="{{ better_market|market_class }}">{{ better_market }}</strong></div>
+{% endif %}
+
+<div class="market-panels mb-2">
+  {% for mkt, ms in market_stats.items() %}
+  <div class="card {% if mkt == 'XAU/USD' %}panel-xau{% else %}panel-btc{% endif %}">
+    <div class="card-header"><h3 class="{{ mkt|market_class }}">{{ mkt }}</h3></div>
+    <div class="stat-list">
+      <div class="stat-row"><span>Total Trades</span><span>{{ ms.total_trades }}</span></div>
+      <div class="stat-row"><span>Net P/L</span><span class="{{ ms.net_pnl|pnl_class }}">{{ ms.net_pnl|money(show_sign=True) }}</span></div>
+      <div class="stat-row"><span>Gross Profit</span><span class="positive">{{ ms.gross_profit|money }}</span></div>
+      <div class="stat-row"><span>Gross Loss</span><span class="negative">{{ (-ms.gross_loss)|money(show_sign=True) }}</span></div>
+      <div class="stat-row"><span>Win Rate</span><span>{{ ms.win_rate|pct if ms.win_rate is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Profit Factor</span><span>{{ ms.profit_factor|ratio if ms.profit_factor is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Avg R:R</span><span>{{ ms.avg_rr|ratio if ms.avg_rr is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Best Trade</span><span class="positive">{{ ms.best_trade|money if ms.best_trade is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Worst Trade</span><span class="negative">{{ ms.worst_trade|money if ms.worst_trade is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Max Drawdown</span><span class="negative">{{ ms.max_drawdown|money if ms.max_drawdown is not none else '—' }}</span></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h3>Recent Trades</h3>
+      <a class="btn btn-secondary btn-sm" href="/trades">View All</a>
+    </div>
+    {% if recent_trades %}
+    <p class="mobile-scroll-hint">Scroll horizontally to see all columns</p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th><th>Market</th><th>Dir</th><th>Entry</th><th>Exit</th>
+            <th>Lots</th><th>Pips</th><th>Net P/L</th><th>Status</th><th>Setup</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in recent_trades %}
+          <tr>
+            <td>{{ t.trade_date|dt }}</td>
+            <td><span class="badge {% if t.market=='XAU/USD' %}badge-xau{% else %}badge-btc{% endif %}">{{ t.market }}</span></td>
+            <td><span class="badge {{ t.direction|badge }}">{{ t.direction }}</span></td>
+            <td class="mono">{{ t.entry_price }}</td>
+            <td class="mono">{{ t.exit_price if t.exit_price is not none else '—' }}</td>
+            <td class="mono">{{ t.lot_size }}</td>
+            <td class="mono">{{ t.pips if t.pips is not none else '—' }}</td>
+            <td class="mono {{ t.net_profit_loss|pnl_class }}">{{ t.net_profit_loss|money(show_sign=True) }}</td>
+            <td><span class="badge {{ t.status|badge }}">{{ t.status }}</span></td>
+            <td>{% if t.setup %}<span class="badge badge-setup">{{ t.setup }}</span>{% else %}—{% endif %}</td>
+            <td class="table-actions">
+              <a class="btn btn-ghost btn-icon" href="/trades/{{ t.id }}" aria-label="View trade"><i data-lucide="eye"></i></a>
+              <a class="btn btn-ghost btn-icon" href="/trades/{{ t.id }}/edit" aria-label="Edit trade"><i data-lucide="pencil"></i></a>
+              <form method="post" action="/trades/{{ t.id }}/delete" class="js-confirm-delete" data-message="Delete this trade?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-ghost btn-icon" aria-label="Delete trade"><i data-lucide="trash-2"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    {% with title='No trades yet', message='Click Sync from MT5 to pull closed XAUUSDm and BTCUSDm trades from Exness.', action_url='/trades', action_label='Go to Trades', icon='refresh-cw' %}
+      {% include "components/empty_state.html" %}
+    {% endwith %}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Journal</h3>
+      <div class="row gap-1">
+        <a class="btn btn-secondary btn-sm" href="/journal/new">New Note</a>
+        <a class="btn btn-ghost btn-sm" href="/journal">View All</a>
+      </div>
+    </div>
+    {% if journal_entries %}
+    <div class="stack-sm">
+      {% for e in journal_entries %}
+      <div class="journal-card" style="padding:0.85rem">
+        <div class="row-between">
+          <strong>{{ e.title }}</strong>
+          <span class="muted text-sm">{{ e.entry_date|d }}</span>
+        </div>
+        <div class="mt-1 text-sm muted">
+          {% if e.market %}<span class="badge {% if e.market=='XAU/USD' %}badge-xau{% else %}badge-btc{% endif %}">{{ e.market }}</span>{% endif %}
+          {% if e.setup %}<span class="badge badge-setup">{{ e.setup }}</span>{% endif %}
+          {% if e.followed_plan == True %}<span class="badge badge-win">Plan followed</span>{% elif e.followed_plan == False %}<span class="badge badge-loss">Plan broken</span>{% endif %}
+        </div>
+        {% if e.notes %}<p class="text-sm mt-1" style="margin-bottom:0">{{ e.notes[:140] }}{% if e.notes|length > 140 %}…{% endif %}</p>{% endif %}
+        {% if e.lesson %}<p class="text-sm muted" style="margin:0.35rem 0 0"><strong>Lesson:</strong> {{ e.lesson[:100] }}</p>{% endif %}
+        {% if e.tags %}<div class="mt-1">{% for tag in e.tags.split(',') %}<span class="tag">{{ tag.strip() }}</span>{% endfor %}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    {% with title='No journal entries', message='Capture lessons while they are fresh.', action_url='/journal/new', action_label='New Note', icon='book-open' %}
+      {% include "components/empty_state.html" %}
+    {% endwith %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/public/js/charts.js"></script>
+<script src="/public/js/dashboard.js"></script>
+{% endblock %}

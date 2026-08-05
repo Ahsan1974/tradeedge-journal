@@ -1,0 +1,12 @@
+<div class="kpi-card {{ tone|default('neutral') }}">
+  <div class="kpi-label">
+    <span>{{ label }}</span>
+    {% if icon %}
+    <span class="kpi-icon" aria-hidden="true"><i data-lucide="{{ icon }}"></i></span>
+    {% endif %}
+  </div>
+  <div class="kpi-value">{{ value }}</div>
+  {% if change %}
+  <div class="kpi-change">{{ change }}</div>
+  {% endif %}
+</div>

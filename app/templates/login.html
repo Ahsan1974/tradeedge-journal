@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — {{ app_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/app.css">
+</head>
+<body>
+  {% include "components/flash_messages.html" %}
+  <div class="login-page">
+    <div class="login-card">
+      <div class="brand">
+        <div class="logo-mark" style="margin:0 auto;width:48px;height:48px;font-size:1rem">TE</div>
+        <h1>{{ app_name }}</h1>
+        <p>{{ app_subtitle }}</p>
+      </div>
+      {% if error %}
+      <div class="error-summary" role="alert">{{ error }}</div>
+      {% endif %}
+      <form method="post" action="/login" class="stack">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="next" value="{{ next|default('/dashboard') }}">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Sign in</button>
+      </form>
+      <p class="muted text-sm mt-2" style="text-align:center">Personal trading journal for {{ profile_name }}</p>
+    </div>
+  </div>
+  <script src="/public/js/app.js"></script>
+</body>
+</html>

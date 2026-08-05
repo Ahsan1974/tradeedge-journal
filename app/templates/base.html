@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/app.css">
+  <link rel="stylesheet" href="/public/css/dashboard.css">
+  <link rel="stylesheet" href="/public/css/forms.css">
+  <link rel="stylesheet" href="/public/css/tables.css">
+  <link rel="stylesheet" href="/public/css/calendar.css">
+  <link rel="stylesheet" href="/public/css/responsive.css">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  {% block head %}{% endblock %}
+</head>
+<body data-csrf="{{ csrf_token }}">
+  {% include "components/flash_messages.html" %}
+  {# Always keep a CSRF token available for JS / tests #}
+  <input type="hidden" id="global-csrf" name="csrf_token" value="{{ csrf_token }}" form="noop">
+  <div class="app-shell">
+    {% include "components/sidebar.html" %}
+    <div class="overlay" id="sidebarOverlay" hidden></div>
+    <div class="main-wrap">
+      {% include "components/topbar.html" %}
+      <main class="content anim-fade-up" id="mainContent">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% include "components/confirm_modal.html" %}
+  <script src="https://unpkg.com/lucide@0.468.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="/public/js/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

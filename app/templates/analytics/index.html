@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Analytics — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2"><h2 style="margin:0">Analytics</h2></div>
+<form class="filter-bar" method="get">
+  <div class="form-group"><label for="period">Period</label>
+    <select name="period" id="period">
+      {% for val,label in [('today','Today'),('7d','7 days'),('30d','30 days'),('month','Month'),('year','Year'),('all','All time'),('custom','Custom')] %}
+      <option value="{{ val }}" {% if filters.period==val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group"><label for="market">Market</label>
+    <select name="market" id="market">
+      <option value="ALL">All</option>
+      <option value="XAU/USD" {% if filters.market=='XAU/USD' %}selected{% endif %}>XAU/USD</option>
+      <option value="BTC/USD" {% if filters.market=='BTC/USD' %}selected{% endif %}>BTC/USD</option>
+    </select>
+  </div>
+  <div class="form-group"><label for="start">Start</label><input type="date" name="start" id="start" value="{{ filters.start or '' }}"></div>
+  <div class="form-group"><label for="end">End</label><input type="date" name="end" id="end" value="{{ filters.end or '' }}"></div>
+  <div class="filter-actions"><button class="btn btn-primary" type="submit">Apply</button></div>
+</form>
+
+<div class="tabs" role="tablist">
+  <button type="button" class="tab-btn active" data-tab="overview">Overview</button>
+  <button type="button" class="tab-btn" data-tab="markets">Market Analysis</button>
+  <button type="button" class="tab-btn" data-tab="setups">Setup Analysis</button>
+  <button type="button" class="tab-btn" data-tab="time">Time Analysis</button>
+  <button type="button" class="tab-btn" data-tab="direction">Direction</button>
+  <button type="button" class="tab-btn" data-tab="risk">Risk Analysis</button>
+</div>
+
+<section class="tab-panel active" id="tab-overview">
+  <div class="grid grid-kpi mb-2">
+    <div class="kpi-card {{ stats.net_pnl|pnl_class }}"><div class="kpi-label"><span>Net P/L</span></div><div class="kpi-value">{{ stats.net_pnl|money(show_sign=True) }}</div></div>
+    <div class="kpi-card"><div class="kpi-label"><span>Win Rate</span></div><div class="kpi-value">{{ stats.win_rate|pct if stats.win_rate is not none else '—' }}</div></div>
+    <div class="kpi-card"><div class="kpi-label"><span>Profit Factor</span></div><div class="kpi-value">{{ stats.profit_factor|ratio if stats.profit_factor is not none else '—' }}</div></div>
+    <div class="kpi-card"><div class="kpi-label"><span>Expectancy</span></div><div class="kpi-value">{{ stats.expectancy|money if stats.expectancy is not none else '—' }}</div></div>
+    <div class="kpi-card negative"><div class="kpi-label"><span>Max Drawdown</span></div><div class="kpi-value">{{ stats.max_drawdown|money if stats.max_drawdown is not none else '—' }}</div></div>
+    <div class="kpi-card"><div class="kpi-label"><span>Avg R Multiple</span></div><div class="kpi-value">{{ stats.avg_r_multiple|ratio if stats.avg_r_multiple is not none else '—' }}</div></div>
+  </div>
+  <div class="card"><div class="chart-box"><canvas id="analyticsEquity"></canvas></div></div>
+</section>
+
+<section class="tab-panel" id="tab-markets">
+  <div class="market-panels">
+    {% for mkt, ms in market_stats.items() %}
+    <div class="card {% if mkt=='XAU/USD' %}panel-xau{% else %}panel-btc{% endif %}">
+      <h3 class="{{ mkt|market_class }}">{{ mkt }}</h3>
+      <div class="stat-list">
+        <div class="stat-row"><span>Trades</span><span>{{ ms.total_trades }}</span></div>
+        <div class="stat-row"><span>Net P/L</span><span class="{{ ms.net_pnl|pnl_class }}">{{ ms.net_pnl|money(show_sign=True) }}</span></div>
+        <div class="stat-row"><span>Win rate</span><span>{{ ms.win_rate|pct if ms.win_rate is not none else '—' }}</span></div>
+        <div class="stat-row"><span>Profit factor</span><span>{{ ms.profit_factor|ratio if ms.profit_factor is not none else '—' }}</span></div>
+        <div class="stat-row"><span>Expectancy</span><span>{{ ms.expectancy|money if ms.expectancy is not none else '—' }}</span></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-setups">
+  <div class="card table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Setup</th><th>Trades</th><th>Wins</th><th>Losses</th><th>Win %</th><th>Net P/L</th><th>PF</th><th>Avg R</th></tr></thead>
+      <tbody>
+        {% for r in setup_rows %}
+        <tr>
+          <td>{{ r.setup }}</td><td>{{ r.closed_trades }}</td><td>{{ r.wins }}</td><td>{{ r.losses }}</td>
+          <td>{{ r.win_rate|pct if r.win_rate is not none else '—' }}</td>
+          <td class="{{ r.net_pnl|pnl_class }}">{{ r.net_pnl|money(show_sign=True) }}</td>
+          <td>{{ r.profit_factor|ratio if r.profit_factor is not none else '—' }}</td>
+          <td>{{ r.avg_r_multiple|ratio if r.avg_r_multiple is not none else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="muted">No closed trades in this period.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-time">
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>By weekday</h3>
+      <div class="stat-list">
+        {% for day, count in weekday.items() %}
+        <div class="stat-row"><span>{{ day }}</span><span>{{ count }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>By session</h3>
+      <div class="stat-list">
+        {% for r in session_rows %}
+        <div class="stat-row"><span>{{ r.session }}</span><span class="{{ r.net_pnl|pnl_class }}">{{ r.net_pnl|money(show_sign=True) }} ({{ r.closed_trades }})</span></div>
+        {% else %}
+        <p class="muted">No data</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>By month</h3>
+      <div class="stat-list">
+        {% for m in monthly %}
+        <div class="stat-row"><span>{{ m.label }}</span><span class="{{ m.value|pnl_class }}">{{ m.value|money(show_sign=True) }}</span></div>
+        {% else %}<p class="muted">No data</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>By hour</h3>
+      <div class="stat-list">
+        {% for h in by_hour %}
+        <div class="stat-row"><span>{{ h.label }}</span><span class="{{ h.value|pnl_class }}">{{ h.value|money(show_sign=True) }} · {{ h.count }} trades</span></div>
+        {% else %}<p class="muted">No data</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-direction">
+  <div class="grid grid-2">
+    {% for r in direction_rows %}
+    <div class="card">
+      <h3><span class="badge {{ r.direction|badge }}">{{ r.direction }}</span></h3>
+      <div class="stat-list">
+        <div class="stat-row"><span>Trades</span><span>{{ r.closed_trades }}</span></div>
+        <div class="stat-row"><span>Net P/L</span><span class="{{ r.net_pnl|pnl_class }}">{{ r.net_pnl|money(show_sign=True) }}</span></div>
+        <div class="stat-row"><span>Win rate</span><span>{{ r.win_rate|pct if r.win_rate is not none else '—' }}</span></div>
+        <div class="stat-row"><span>Expectancy</span><span>{{ r.expectancy|money if r.expectancy is not none else '—' }}</span></div>
+      </div>
+    </div>
+    {% else %}
+    <p class="muted">No closed trades.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-risk">
+  <div class="card">
+    <div class="stat-list">
+      <div class="stat-row"><span>Average risk amount</span><span>{{ stats.avg_risk|money if stats.avg_risk is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Average R multiple</span><span>{{ stats.avg_r_multiple|ratio if stats.avg_r_multiple is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Max win streak</span><span>{{ stats.max_win_streak }}</span></div>
+      <div class="stat-row"><span>Max loss streak</span><span>{{ stats.max_loss_streak }}</span></div>
+      <div class="stat-row"><span>Current loss streak</span><span>{{ stats.current_loss_streak }}</span></div>
+      <div class="stat-row"><span>Max drawdown %</span><span>{{ stats.max_drawdown_pct|pct if stats.max_drawdown_pct is not none else '—' }}</span></div>
+    </div>
+    <p class="form-hint mt-2">Informational metrics only — not financial advice. See Risk Management for live monitors and calculators.</p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/public/js/charts.js"></script>
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+(async () => {
+  const q = new URLSearchParams(window.location.search);
+  const data = await TradeEdgeCharts.fetchJSON('/api/analytics/cumulative-pnl?' + q.toString());
+  if (data && window.Chart) {
+    TradeEdgeCharts.lineChart('analyticsEquity', data.labels || [], data.values || [], {label: 'Equity', color: '#3b82f6'});
+  }
+})();
+</script>
+{% endblock %}

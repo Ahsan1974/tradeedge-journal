@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Settings — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-2"><h2 style="margin:0">Settings</h2><p class="muted text-sm">Account, risk rules, and broker symbol specifications</p></div>
+{% set xau = symbols.get('XAU/USD') %}
+{% set btc = symbols.get('BTC/USD') %}
+
+<form method="post" class="stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+  <div class="card form-section">
+    <h3>Account Settings</h3>
+    <div class="form-grid">
+      <div class="form-group"><label for="starting_balance">Starting balance</label><input id="starting_balance" name="starting_balance" value="{{ settings.starting_balance }}"></div>
+      <div class="form-group"><label for="current_balance">Current balance</label><input id="current_balance" name="current_balance" value="{{ settings.current_balance }}"></div>
+      <div class="form-group"><label for="base_currency">Base currency</label><input id="base_currency" name="base_currency" value="{{ settings.base_currency }}"></div>
+      <div class="form-group"><label for="timezone">Timezone</label><input id="timezone" name="timezone" value="{{ settings.timezone }}"></div>
+    </div>
+  </div>
+
+  <div class="card form-section">
+    <h3>Risk Settings</h3>
+    <div class="form-grid">
+      <div class="form-group"><label for="default_risk_percent">Default risk %</label><input id="default_risk_percent" name="default_risk_percent" value="{{ settings.default_risk_percent }}"></div>
+      <div class="form-group"><label for="maximum_risk_percent">Max risk / trade %</label><input id="maximum_risk_percent" name="maximum_risk_percent" value="{{ settings.maximum_risk_percent }}"></div>
+      <div class="form-group"><label for="daily_loss_limit_percent">Daily loss limit %</label><input id="daily_loss_limit_percent" name="daily_loss_limit_percent" value="{{ settings.daily_loss_limit_percent }}"></div>
+      <div class="form-group"><label for="weekly_loss_limit_percent">Weekly loss limit %</label><input id="weekly_loss_limit_percent" name="weekly_loss_limit_percent" value="{{ settings.weekly_loss_limit_percent }}"></div>
+      <div class="form-group"><label for="maximum_trades_per_day">Max trades / day</label><input type="number" id="maximum_trades_per_day" name="maximum_trades_per_day" value="{{ settings.maximum_trades_per_day }}"></div>
+      <div class="form-group"><label for="maximum_consecutive_losses">Max consecutive losses</label><input type="number" id="maximum_consecutive_losses" name="maximum_consecutive_losses" value="{{ settings.maximum_consecutive_losses }}"></div>
+      <div class="form-group"><label for="maximum_total_open_risk_percent">Max open risk %</label><input id="maximum_total_open_risk_percent" name="maximum_total_open_risk_percent" value="{{ settings.maximum_total_open_risk_percent }}"></div>
+    </div>
+  </div>
+
+  <div class="card form-section panel-xau">
+    <h3>XAU/USD Configuration</h3>
+    <div class="warning-summary">Symbol specifications must match your broker. Defaults are examples only.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Contract size</label><input name="xau_contract_size" value="{{ xau.contract_size if xau else '' }}"></div>
+      <div class="form-group"><label>Tick size</label><input name="xau_tick_size" value="{{ xau.tick_size if xau else '' }}"></div>
+      <div class="form-group"><label>Tick value / lot</label><input name="xau_tick_value_per_lot" value="{{ xau.tick_value_per_lot if xau else '' }}"></div>
+      <div class="form-group"><label>Pip size</label><input name="xau_pip_size" value="{{ xau.pip_size if xau else '' }}"></div>
+      <div class="form-group"><label>Decimal places</label><input type="number" name="xau_decimal_places" value="{{ xau.decimal_places if xau else 2 }}"></div>
+      <div class="form-group"><label class="checkbox-row"><input type="checkbox" name="xau_enabled" value="1" {% if not xau or xau.enabled %}checked{% endif %}> Enabled</label></div>
+    </div>
+  </div>
+
+  <div class="card form-section panel-btc">
+    <h3>BTC/USD Configuration</h3>
+    <div class="warning-summary">Symbol specifications must match your broker. Defaults are examples only.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Contract size</label><input name="btc_contract_size" value="{{ btc.contract_size if btc else '' }}"></div>
+      <div class="form-group"><label>Tick size</label><input name="btc_tick_size" value="{{ btc.tick_size if btc else '' }}"></div>
+      <div class="form-group"><label>Tick value / lot</label><input name="btc_tick_value_per_lot" value="{{ btc.tick_value_per_lot if btc else '' }}"></div>
+      <div class="form-group"><label>Pip size</label><input name="btc_pip_size" value="{{ btc.pip_size if btc else '' }}"></div>
+      <div class="form-group"><label>Decimal places</label><input type="number" name="btc_decimal_places" value="{{ btc.decimal_places if btc else 2 }}"></div>
+      <div class="form-group"><label class="checkbox-row"><input type="checkbox" name="btc_enabled" value="1" {% if not btc or btc.enabled %}checked{% endif %}> Enabled</label></div>
+    </div>
+  </div>
+
+  <div class="card form-section">
+    <h3>Display Settings</h3>
+    <div class="form-grid">
+      <div class="form-group"><label for="default_dashboard_period">Default dashboard period</label>
+        <select id="default_dashboard_period" name="default_dashboard_period">
+          {% for p in ['today','7d','30d','month','year','all'] %}
+          <option value="{{ p }}" {% if settings.default_dashboard_period==p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group"><label for="default_market_filter">Default market</label>
+        <select id="default_market_filter" name="default_market_filter">
+          <option value="ALL" {% if settings.default_market_filter=='ALL' %}selected{% endif %}>All</option>
+          <option value="XAU/USD" {% if settings.default_market_filter=='XAU/USD' %}selected{% endif %}>XAU/USD</option>
+          <option value="BTC/USD" {% if settings.default_market_filter=='BTC/USD' %}selected{% endif %}>BTC/USD</option>
+        </select>
+      </div>
+      <div class="form-group"><label for="number_format">Number format</label><input id="number_format" name="number_format" value="{{ settings.number_format }}"></div>
+      <div class="form-group"><label for="date_format">Date format</label><input id="date_format" name="date_format" value="{{ settings.date_format }}"></div>
+      <div class="form-group"><label for="table_density">Table density</label>
+        <select id="table_density" name="table_density">
+          <option value="comfortable" {% if settings.table_density=='comfortable' %}selected{% endif %}>Comfortable</option>
+          <option value="compact" {% if settings.table_density=='compact' %}selected{% endif %}>Compact</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Save Settings</button>
+</form>
+{% endblock %}

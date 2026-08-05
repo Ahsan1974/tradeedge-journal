@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Not Found — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <i data-lucide="search-x"></i>
+  <h3>Page not found</h3>
+  <p>The page you requested does not exist or was moved.</p>
+  <a class="btn btn-primary" href="/dashboard">Back to Dashboard</a>
+</div>
+{% endblock %}

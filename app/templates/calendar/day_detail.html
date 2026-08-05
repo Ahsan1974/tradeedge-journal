@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ day|d }} — Calendar — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2">
+  <div>
+    <h2 style="margin:0">{{ day.strftime('%A, %d %B %Y') }}</h2>
+    <p class="muted text-sm">Day P/L: <span class="{{ stats.net_pnl|pnl_class }}">{{ stats.net_pnl|money(show_sign=True) }}</span> · {{ stats.total_trades }} trade(s)</p>
+  </div>
+  <a class="btn btn-secondary" href="/calendar?year={{ day.year }}&month={{ day.month }}">Back to calendar</a>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header"><h3>Trades</h3><a class="btn btn-sm btn-gold" href="/trades/new">Add</a></div>
+    {% if trades %}
+    <div class="table-wrap">
+      <table class="data-table compact">
+        <thead><tr><th>Market</th><th>Dir</th><th>Net</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for t in trades %}
+          <tr>
+            <td class="{{ t.market|market_class }}">{{ t.market }}</td>
+            <td><span class="badge {{ t.direction|badge }}">{{ t.direction }}</span></td>
+            <td class="{{ t.net_profit_loss|pnl_class }}">{{ t.net_profit_loss|money(show_sign=True) }}</td>
+            <td><span class="badge {{ t.status|badge }}">{{ t.status }}</span></td>
+            <td><a href="/trades/{{ t.id }}">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">No trades this day.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Journal</h3><a class="btn btn-sm btn-secondary" href="/journal/new">New note</a></div>
+    {% if journal_entries %}
+    <div class="stack-sm">
+      {% for e in journal_entries %}
+      <div class="journal-card" style="padding:0.75rem">
+        <strong>{{ e.title }}</strong>
+        <p class="text-sm">{{ e.notes or '' }}</p>
+        <a class="btn btn-ghost btn-sm" href="/journal/{{ e.id }}/edit">Edit</a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No journal entries this day.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
