@@ -6,15 +6,14 @@ import logging
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from app.csrf import generate_csrf_token, validate_csrf_token
 from app.dependencies import template_context
 from app.security import authenticate_user, is_authenticated, login_user, logout_user, session_flash
+from app.templating import templates
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["auth"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/login", response_class=HTMLResponse)

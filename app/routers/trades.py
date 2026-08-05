@@ -6,7 +6,6 @@ from datetime import datetime
 
 from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 
 from app.csrf import validate_csrf_token
 from app.dependencies import DbSession, template_context
@@ -25,9 +24,9 @@ from app.services.trade_service import (
 )
 from app.utils.dates import now_tz, parse_datetime, period_range
 from app.utils.decimals import to_decimal
+from app.templating import templates
 
 router = APIRouter(tags=["trades"])
-templates = Jinja2Templates(directory="app/templates")
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
 

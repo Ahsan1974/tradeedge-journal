@@ -33,7 +33,7 @@ Built for a single trader (**Ahsan Trader**) — not a multi-tenant SaaS product
 ## Folder structure
 
 ```
-app.py                 # FastAPI entry (Vercel + local)
+app.py                 # (removed — use app/main.py; avoids shadowing the app package)
 app/                   # Application package (models, routers, services, templates)
 public/                # Static CSS/JS/images
 migrations/            # Alembic migrations
@@ -171,7 +171,7 @@ Do **not** use SQLite on Vercel.
 2. Import the project in Vercel (Python runtime).
 3. Set environment variables (below).
 4. Attach Neon (or another hosted Postgres) via `DATABASE_URL`.
-5. Deploy. Root `app.py` exposes `app = FastAPI(...)`.
+5. Deploy. Entrypoint is `app.main:app` (see `pyproject.toml` `[tool.vercel]`).
 6. Static assets are served from `/public`.
 
 ### Required Vercel environment variables

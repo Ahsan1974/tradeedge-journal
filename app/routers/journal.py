@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from app.csrf import validate_csrf_token
 from app.dependencies import DbSession, template_context
@@ -16,10 +15,10 @@ from app.repositories.trade_repository import TradeRepository
 from app.security import session_flash
 from app.services.analytics_service import analyze_performance
 from app.services.journal_service import journal_analytics
+from app.templating import templates
 from app.utils.dates import now_tz, parse_date, period_range
 
 router = APIRouter(tags=["journal"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/journal", response_class=HTMLResponse)

@@ -6,7 +6,6 @@ from datetime import date
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.dependencies import DbSession, template_context
 from app.repositories.journal_repository import JournalRepository
@@ -14,10 +13,10 @@ from app.repositories.settings_repository import SettingsRepository
 from app.repositories.trade_repository import TradeRepository
 from app.services.analytics_service import analyze_performance
 from app.services.calendar_service import build_month_calendar
+from app.templating import templates
 from app.utils.dates import get_tz, month_bounds, now_tz, period_range
 
 router = APIRouter(tags=["calendar"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/calendar", response_class=HTMLResponse)

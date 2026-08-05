@@ -4,6 +4,9 @@ version = "1.0.0"
 description = "Personal trading journal and analytics dashboard for XAU/USD and BTC/USD"
 requires-python = ">=3.12"
 
+[tool.vercel]
+entrypoint = "app.main:app"
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

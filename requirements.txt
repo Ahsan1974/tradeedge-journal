@@ -13,4 +13,5 @@ httpx==0.28.1
 pytest==8.3.4
 ruff==0.8.4
 itsdangerous==2.2.0
-MetaTrader5==5.0.6090
+# MetaTrader5 is Windows-only — install locally, never on Vercel:
+#   pip install MetaTrader5==5.0.6090

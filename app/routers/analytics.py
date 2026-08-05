@@ -6,17 +6,16 @@ from datetime import datetime
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.dependencies import DbSession, template_context
 from app.models.trade import Setup, TradingSession
 from app.repositories.settings_repository import SettingsRepository
 from app.repositories.trade_repository import TradeRepository
 from app.services import analytics_service as analytics
+from app.templating import templates
 from app.utils.dates import now_tz, period_range
 
 router = APIRouter(tags=["analytics"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/analytics", response_class=HTMLResponse)

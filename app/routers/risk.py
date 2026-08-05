@@ -6,17 +6,16 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.dependencies import DbSession, template_context
 from app.repositories.settings_repository import SettingsRepository
 from app.repositories.trade_repository import TradeRepository
 from app.services.analytics_service import analyze_performance
 from app.services.risk_service import daily_risk_monitor, risk_discipline_score
+from app.templating import templates
 from app.utils.dates import now_tz, period_range
 
 router = APIRouter(tags=["risk"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/risk-management", response_class=HTMLResponse)

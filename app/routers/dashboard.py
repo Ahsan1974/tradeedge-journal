@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from app.dependencies import DbSession, template_context
 from app.repositories.journal_repository import JournalRepository
@@ -15,6 +14,7 @@ from app.repositories.settings_repository import SettingsRepository
 from app.repositories.trade_repository import TradeRepository
 from app.services import analytics_service as analytics
 from app.services.risk_service import daily_risk_monitor
+from app.templating import templates
 from app.utils.dates import (
     format_duration,
     now_tz,
@@ -24,7 +24,6 @@ from app.utils.dates import (
 from app.utils.formatting import format_duration as _fd  # noqa: F401
 
 router = APIRouter(tags=["dashboard"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 def _filter_kwargs(request: Request, settings_tz: str):

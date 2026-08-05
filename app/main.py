@@ -9,13 +9,13 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.dependencies import template_context
 from app.routers import analytics, api, calendar, dashboard, journal, mt5, risk, trades
 from app.routers import settings as settings_router
+from app.templating import templates
 from app.utils.formatting import (
     fmt_date,
     fmt_datetime,
@@ -52,12 +52,11 @@ app.add_middleware(
     max_age=60 * 60 * 24 * 14,
 )
 
-# Project root / public (works whether loaded as package or via root app.py)
+# Static assets (also promoted to Vercel CDN when present under public/)
 PUBLIC_DIR = Path(__file__).resolve().parents[1] / "public"
 if PUBLIC_DIR.exists():
     app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
 
-templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["money"] = fmt_money
 templates.env.filters["pct"] = fmt_pct
 templates.env.filters["number"] = fmt_number
@@ -70,13 +69,9 @@ templates.env.filters["market_class"] = market_class
 templates.env.filters["holding"] = holding_time_label
 
 
-def _configure_templates(mod_templates: Jinja2Templates) -> None:
-    mod_templates.env.filters.update(templates.env.filters)
-
-
 for mod in (dashboard, trades, journal, analytics, risk, calendar, settings_router):
     if hasattr(mod, "templates"):
-        _configure_templates(mod.templates)
+        mod.templates = templates
 
 
 app.include_router(dashboard.router)
