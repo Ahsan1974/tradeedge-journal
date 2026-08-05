@@ -111,7 +111,7 @@ Demo trades use `source="DEMO"` so they can be deleted safely.
 ### 6. Run locally
 
 ```powershell
-uvicorn app:app --reload --host 127.0.0.1 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 (`app:app` loads the `app` package, which exports the FastAPI instance from `app.main`.)
