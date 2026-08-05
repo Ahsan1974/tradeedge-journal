@@ -52,9 +52,15 @@ app.add_middleware(
     max_age=60 * 60 * 24 * 14,
 )
 
-# Static assets (also promoted to Vercel CDN when present under public/)
+# Static assets: Vercel serves public/** from CDN at /css, /js, /images.
+# Locally we mount the same URL paths so templates work in both places.
 PUBLIC_DIR = Path(__file__).resolve().parents[1] / "public"
 if PUBLIC_DIR.exists():
+    for sub, name in (("css", "css"), ("js", "js"), ("images", "images")):
+        folder = PUBLIC_DIR / sub
+        if folder.is_dir():
+            app.mount(f"/{name}", StaticFiles(directory=str(folder)), name=name)
+    # Back-compat for any leftover /public/... links
     app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
 
 templates.env.filters["money"] = fmt_money
