@@ -29,5 +29,7 @@ def template_context(request: Request, **extra) -> dict:
         "csrf_token": generate_csrf_token(request),
         "flashes": pop_flashes(request),
         "timezone": settings.default_timezone,
+        "mt5_sync_available": settings.mt5_sync_available,
+        "mt5_enabled": settings.mt5_enabled,
         **extra,
     }

@@ -51,6 +51,20 @@ class Settings(BaseSettings):
         return self.app_env == "production"
 
     @property
+    def mt5_sync_available(self) -> bool:
+        """True only when local MT5 sync can actually run (Windows + package + enabled)."""
+        if not self.mt5_enabled:
+            return False
+        if self.is_production:
+            # Vercel / Linux hosts never have a local Exness terminal
+            return False
+        try:
+            import MetaTrader5  # noqa: F401
+        except ImportError:
+            return False
+        return bool(self.mt5_login and self.mt5_password and self.mt5_server)
+
+    @property
     def mt5_symbol_map(self) -> dict[str, str]:
         """MT5 symbol → dashboard market label."""
         return {

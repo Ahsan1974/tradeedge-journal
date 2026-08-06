@@ -53,12 +53,24 @@
       <strong>{{ pakistan_time.strftime('%H:%M') if pakistan_time is defined else '—' }}</strong>
     </div>
     <div class="sidebar-quick">
+      {% if mt5_sync_available %}
       <form method="post" action="/trades/sync-mt5">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="btn btn-gold btn-sm" style="width:100%">
           <i data-lucide="refresh-cw"></i> Sync from MT5
         </button>
       </form>
+      {% else %}
+      <p class="muted text-sm" style="margin:0 0 0.5rem;line-height:1.35">
+        Sync runs on your Windows PC only (not on this website).
+      </p>
+      <form method="post" action="/trades/sync-mt5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-secondary btn-sm" style="width:100%" title="Shows how to sync from your PC">
+          <i data-lucide="info"></i> How to sync
+        </button>
+      </form>
+      {% endif %}
     </div>
   </div>
 </aside>

@@ -7,10 +7,17 @@
     <p class="muted text-sm" style="margin:0.25rem 0 0">Filtered analytics for your XAU/USD &amp; BTC/USD journal</p>
   </div>
   <div class="dashboard-hero-actions">
+    {% if mt5_sync_available %}
     <form method="post" action="/trades/sync-mt5">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button type="submit" class="btn btn-gold"><i data-lucide="refresh-cw"></i> Sync from MT5</button>
     </form>
+    {% else %}
+    <form method="post" action="/trades/sync-mt5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-secondary" title="MT5 sync runs on your Windows PC"><i data-lucide="info"></i> How to sync</button>
+    </form>
+    {% endif %}
     <a class="btn btn-secondary" href="/trades">View Trades</a>
   </div>
 </div>
