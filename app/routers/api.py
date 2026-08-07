@@ -63,6 +63,17 @@ async def api_cumulative_pnl(request: Request, db: DbSession):
     return {"labels": [p["label"] for p in equity], "values": [p["value"] for p in equity]}
 
 
+@router.get("/analytics/equity-vs-balance")
+async def api_equity_vs_balance(request: Request, db: DbSession):
+    trades, settings = _filtered_trades(request, db)
+    data = analytics.compute_equity_vs_balance(
+        trades,
+        settings.starting_balance,
+        settings.current_balance,
+    )
+    return data
+
+
 @router.get("/analytics/distribution")
 async def api_distribution(request: Request, db: DbSession):
     trades, _ = _filtered_trades(request, db)

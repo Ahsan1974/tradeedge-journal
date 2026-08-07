@@ -108,6 +108,12 @@ def period_range(
         start_dt = datetime.combine(start_day, datetime.min.time(), tzinfo=tz)
         return start_dt, now
 
+    if period == "week":
+        # Calendar week Monday → now
+        start_day = today - timedelta(days=today.weekday())
+        start_dt = datetime.combine(start_day, datetime.min.time(), tzinfo=tz)
+        return start_dt, now
+
     if period == "30d":
         start_day = today - timedelta(days=29)
         start_dt = datetime.combine(start_day, datetime.min.time(), tzinfo=tz)

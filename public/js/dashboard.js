@@ -16,7 +16,7 @@
     const C = TradeEdgeCharts;
 
     const [
-      cumulative,
+      equityBalance,
       distribution,
       frequency,
       daily,
@@ -27,7 +27,7 @@
       timeframe,
       drawdown,
     ] = await Promise.all([
-      C.fetchJSON("/api/analytics/cumulative-pnl?" + q),
+      C.fetchJSON("/api/analytics/equity-vs-balance?" + q),
       C.fetchJSON("/api/analytics/distribution?" + q),
       C.fetchJSON("/api/analytics/frequency?" + q),
       C.fetchJSON("/api/analytics/daily-pnl?" + q),
@@ -39,7 +39,25 @@
       C.fetchJSON("/api/analytics/drawdown?" + q),
     ]);
 
-    if (cumulative) C.lineChart("chartCumulative", cumulative.labels || [], cumulative.values || [], { label: "Equity", color: C.COLORS.blue });
+    if (equityBalance && C.multiLineChart) {
+      C.multiLineChart("chartCumulative", equityBalance.labels || [], [
+        { label: "Trading equity", values: equityBalance.trading_equity || [], color: C.COLORS.blue },
+        { label: "Account balance", values: equityBalance.account_balance || [], color: C.COLORS.gold, dashed: true },
+      ]);
+      const note = document.getElementById("equityBalanceNote");
+      if (note && equityBalance.cash_adjustment != null) {
+        const adj = Number(equityBalance.cash_adjustment);
+        note.textContent =
+          adj === 0
+            ? "Trading equity matches account balance (no extra deposits/withdrawals detected)."
+            : `Implied cash adjustment (deposits − withdrawals − non-trade items): ${adj >= 0 ? "+" : ""}$${adj.toFixed(2)}.`;
+      }
+    } else if (equityBalance) {
+      C.lineChart("chartCumulative", equityBalance.labels || [], equityBalance.trading_equity || [], {
+        label: "Equity",
+        color: C.COLORS.blue,
+      });
+    }
     if (distribution) C.doughnutChart("chartDistribution", distribution.labels || [], distribution.values || [], distribution.colors);
     if (frequency) C.barChart("chartFrequency", frequency.labels || [], frequency.values || [], { color: C.COLORS.blue });
     if (daily) C.barChart("chartDaily", daily.labels || [], daily.values || [], { signed: true });

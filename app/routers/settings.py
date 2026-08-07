@@ -66,6 +66,10 @@ async def settings_save(request: Request, db: DbSession):
     settings.maximum_total_open_risk_percent = (
         d("maximum_total_open_risk_percent", settings.maximum_total_open_risk_percent) or Decimal("3")
     )
+    settings.weekly_pnl_goal = d("weekly_pnl_goal", settings.weekly_pnl_goal) or Decimal("50")
+    settings.monthly_pnl_goal = d("monthly_pnl_goal", settings.monthly_pnl_goal) or Decimal("200")
+    settings.win_rate_goal = d("win_rate_goal", settings.win_rate_goal) or Decimal("50")
+    settings.followed_plan_goal = d("followed_plan_goal", settings.followed_plan_goal) or Decimal("80")
     settings.base_currency = form.get("base_currency") or "USD"
     settings.timezone = form.get("timezone") or "Asia/Karachi"
     settings.default_dashboard_period = form.get("default_dashboard_period") or "30d"

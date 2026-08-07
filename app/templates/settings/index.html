@@ -19,6 +19,27 @@
   </div>
 
   <div class="card form-section">
+    <h3>Trading Goals</h3>
+    <p class="muted text-sm">Shown on the dashboard and review page. Adjust to match your account size.</p>
+    <div class="form-grid">
+      <div class="form-group"><label for="weekly_pnl_goal">Weekly P/L goal ($)</label><input id="weekly_pnl_goal" name="weekly_pnl_goal" value="{{ settings.weekly_pnl_goal }}"></div>
+      <div class="form-group"><label for="monthly_pnl_goal">Monthly P/L goal ($)</label><input id="monthly_pnl_goal" name="monthly_pnl_goal" value="{{ settings.monthly_pnl_goal }}"></div>
+      <div class="form-group"><label for="win_rate_goal">Win rate goal (%)</label><input id="win_rate_goal" name="win_rate_goal" value="{{ settings.win_rate_goal }}"></div>
+      <div class="form-group"><label for="followed_plan_goal">Followed-plan goal (%)</label><input id="followed_plan_goal" name="followed_plan_goal" value="{{ settings.followed_plan_goal }}"></div>
+    </div>
+  </div>
+
+  <div class="card form-section">
+    <h3>Local MT5 sync helper</h3>
+    <p class="muted text-sm">Cloud hosting cannot talk to MetaTrader. On your Windows PC:</p>
+    <ol class="muted text-sm" style="margin:0.5rem 0 0;padding-left:1.2rem;line-height:1.55">
+      <li>Double-click <code>scripts\Sync_MT5.bat</code> for one-click sync (keep Exness MT5 open).</li>
+      <li>Or install a 30‑minute auto sync: run PowerShell <code>.\scripts\install_sync_scheduler.ps1</code></li>
+      <li>Keep <code>DATABASE_URL</code> in <code>.env</code> pointed at Neon so the live site updates.</li>
+    </ol>
+  </div>
+
+  <div class="card form-section">
     <h3>Risk Settings</h3>
     <div class="form-grid">
       <div class="form-group"><label for="default_risk_percent">Default risk %</label><input id="default_risk_percent" name="default_risk_percent" value="{{ settings.default_risk_percent }}"></div>

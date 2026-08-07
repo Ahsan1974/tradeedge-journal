@@ -35,6 +35,12 @@ class RiskSettings(Base):
     maximum_total_open_risk_percent: Mapped[Decimal] = mapped_column(
         Percent, nullable=False, default=Decimal("3")
     )
+    # Trading goals (USD / percent)
+    weekly_pnl_goal: Mapped[Decimal] = mapped_column(Money, nullable=False, default=Decimal("50"))
+    monthly_pnl_goal: Mapped[Decimal] = mapped_column(Money, nullable=False, default=Decimal("200"))
+    win_rate_goal: Mapped[Decimal] = mapped_column(Percent, nullable=False, default=Decimal("50"))
+    followed_plan_goal: Mapped[Decimal] = mapped_column(Percent, nullable=False, default=Decimal("80"))
+
     base_currency: Mapped[str] = mapped_column(String(8), nullable=False, default="USD")
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="Asia/Karachi")
 

@@ -13,7 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.dependencies import template_context
-from app.routers import analytics, api, calendar, dashboard, journal, mt5, risk, trades
+from app.routers import analytics, api, calendar, dashboard, journal, mt5, review, risk, sync_guide, trades
 from app.routers import settings as settings_router
 from app.templating import templates
 from app.utils.formatting import (
@@ -75,7 +75,7 @@ templates.env.filters["market_class"] = market_class
 templates.env.filters["holding"] = holding_time_label
 
 
-for mod in (dashboard, trades, journal, analytics, risk, calendar, settings_router):
+for mod in (dashboard, trades, journal, analytics, risk, calendar, settings_router, review):
     if hasattr(mod, "templates"):
         mod.templates = templates
 
@@ -83,8 +83,10 @@ for mod in (dashboard, trades, journal, analytics, risk, calendar, settings_rout
 app.include_router(dashboard.router)
 app.include_router(trades.router)
 app.include_router(mt5.router)
+app.include_router(sync_guide.router)
 app.include_router(journal.router)
 app.include_router(analytics.router)
+app.include_router(review.router)
 app.include_router(risk.router)
 app.include_router(calendar.router)
 app.include_router(settings_router.router)

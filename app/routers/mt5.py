@@ -14,9 +14,9 @@ from app.services.mt5_service import mt5_account_info, sync_closed_trades
 router = APIRouter(tags=["mt5"])
 
 CLOUD_SYNC_MSG = (
-    "MT5 Sync only works on your Windows PC (Exness terminal), not on the live website. "
-    "On your PC run:  .\\.venv\\Scripts\\python.exe scripts\\sync_mt5.py  "
-    "with DATABASE_URL pointing at Neon — then refresh this site."
+    "This live website cannot reach MetaTrader. "
+    "On your Windows PC: open Exness MT5, then double-click scripts\\Sync_MT5.bat "
+    "(or see /sync). Mobile MT5 cannot sync — no API. Then refresh this site."
 )
 
 
@@ -31,7 +31,7 @@ async def sync_mt5_post(request: Request, db: DbSession, csrf_token: str = Form(
     settings = get_settings()
     if not settings.mt5_sync_available:
         session_flash(request, CLOUD_SYNC_MSG, "warning")
-        return RedirectResponse("/dashboard", status_code=303)
+        return RedirectResponse("/sync", status_code=303)
 
     try:
         result = sync_closed_trades(db)

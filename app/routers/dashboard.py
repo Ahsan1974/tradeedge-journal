@@ -152,6 +152,25 @@ async def dashboard(request: Request, db: DbSession):
     journal = JournalRepository(db).recent(5)
     monitor = daily_risk_monitor(db, settings)
 
+    week_from, week_to = period_range("week", tz_name=settings.timezone)
+    week_trades = trade_repo.all_filtered(date_from=week_from, date_to=week_to)
+    from app.services.goals_service import build_goals_progress, build_streak_summary
+
+    w0 = week_from.date() if week_from else None
+    w1 = week_to.date() if week_to else None
+    week_entries = []
+    if w0 and w1:
+        week_entries = JournalRepository(db).list_filtered(
+            page=1, per_page=100, date_from=w0, date_to=w1
+        ).items
+    goals = build_goals_progress(
+        settings,
+        week_trades=week_trades,
+        month_trades=month_trades,
+        week_entries=week_entries,
+    )
+    streaks = build_streak_summary(trades)
+
     ctx = template_context(
         request,
         active_page="dashboard",
@@ -171,5 +190,7 @@ async def dashboard(request: Request, db: DbSession):
         sessions=[s.value for s in __import__("app.models.trade", fromlist=["TradingSession"]).TradingSession],
         monitor=monitor,
         stats=stats,
+        goals=goals,
+        streaks=streaks,
     )
     return templates.TemplateResponse("dashboard.html", ctx)

@@ -317,6 +317,49 @@ def compute_drawdown(
     return money(abs(max_dd)), max_dd_pct, dd_series, eq_series
 
 
+def compute_equity_vs_balance(
+    trades: Sequence[Trade],
+    starting_balance: Decimal | None = None,
+    current_balance: Decimal | None = None,
+) -> dict[str, Any]:
+    """
+    Two curves for charting:
+    - trading_equity: starting_balance + cumulative closed trade net P/L
+    - account_balance: trading_equity + implied non-trade cash
+      (deposits/withdrawals/adjustments = current_balance - final trading equity)
+
+    Without a deposit ledger, cash is modeled as a constant offset so the
+    balance curve ends at the broker current_balance.
+    """
+    _, _, _, eq_series = compute_drawdown(trades, starting_balance)
+    if not eq_series:
+        start = float(starting_balance or ZERO)
+        cur = float(current_balance if current_balance is not None else start)
+        return {
+            "labels": ["Start", "Now"],
+            "trading_equity": [start, start],
+            "account_balance": [start, cur],
+            "cash_adjustment": cur - start,
+            "final_trading_equity": start,
+            "current_balance": cur,
+        }
+
+    labels = [p["label"] for p in eq_series]
+    trading = [float(p["value"]) for p in eq_series]
+    final_eq = trading[-1]
+    cur = float(current_balance) if current_balance is not None else final_eq
+    cash_adj = cur - final_eq
+    balance = [v + cash_adj for v in trading]
+    return {
+        "labels": labels,
+        "trading_equity": trading,
+        "account_balance": balance,
+        "cash_adjustment": cash_adj,
+        "final_trading_equity": final_eq,
+        "current_balance": cur,
+    }
+
+
 def compute_streaks(trades: Sequence[Trade]) -> tuple[int, int, int, int]:
     """
     Returns (current_win, current_loss, max_win, max_loss).

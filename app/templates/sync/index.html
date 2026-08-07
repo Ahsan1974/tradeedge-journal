@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Sync from MT5 — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-2">
+  <h2 style="margin:0">Sync from MT5</h2>
+  <p class="muted text-sm">How closed trades get into TradeEdge (and what is <strong>not</strong> possible)</p>
+</div>
+
+<div class="card mb-2" style="border-color: rgba(224,180,74,0.35); box-shadow: var(--glow-gold)">
+  <div class="card-header"><h3>Can I sync from MT5 Mobile?</h3></div>
+  <p class="text-sm" style="margin:0">
+    <strong class="negative">No.</strong> MetaTrader mobile (Android/iOS) has <strong>no API</strong> for apps like this.
+    Only the <strong>Windows Exness MT5 desktop</strong> can be read by TradeEdge (via the MetaTrader5 Python package).
+    Trades you open on mobile still land on the same Exness account — sync them later from the Windows terminal.
+  </p>
+</div>
+
+<div class="card mb-2">
+  <div class="card-header"><h3>Why the live website Sync button fails</h3></div>
+  <p class="text-sm muted" style="margin:0">
+    Opening this site on your Windows PC still runs the app on <strong>Vercel’s servers</strong> (in the cloud).
+    Those servers cannot see your Exness terminal. Sync must run <strong>on your PC</strong>, writing into Neon — then refresh the website.
+  </p>
+</div>
+
+<div class="grid grid-2 mb-2">
+  <div class="card">
+    <div class="card-header"><h3>Fastest: one-click sync</h3></div>
+    <ol class="text-sm" style="margin:0;padding-left:1.2rem;line-height:1.6">
+      <li>Open <strong>Exness MetaTrader 5</strong> on Windows and stay logged in.</li>
+      <li>Double-click <code>D:\Trading Dashboard\scripts\Sync_MT5.bat</code></li>
+      <li>Wait for the success message, then refresh this website.</li>
+    </ol>
+    {% if mt5_local %}
+    <form method="post" action="/trades/sync-mt5" class="mt-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn btn-gold"><i data-lucide="refresh-cw"></i> Sync now (local app)</button>
+    </form>
+    <p class="muted text-sm mt-1">You’re on the local app — this button talks to MT5 on this PC.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Auto-update every 30 minutes</h3></div>
+    <p class="text-sm muted">Keep your PC on with MT5 open. Install once in PowerShell:</p>
+    <pre class="code-block text-sm">cd "D:\Trading Dashboard"
+.\scripts\install_sync_scheduler.ps1</pre>
+    <p class="text-sm muted" style="margin-top:0.75rem">Remove later with <code>.\scripts\uninstall_sync_scheduler.ps1</code></p>
+  </div>
+</div>
+
+<div class="card mb-2">
+  <div class="card-header"><h3>Sync from anywhere without MT5 API</h3></div>
+  <p class="text-sm muted">If you’re away from the PC, use CSV import on this site:</p>
+  <ol class="text-sm" style="margin:0;padding-left:1.2rem;line-height:1.6">
+    <li>On any device, export history from MT5 (or use the EA export file).</li>
+    <li>Go to <a href="/trades/import">Trades → Import</a> and upload the CSV.</li>
+  </ol>
+</div>
+
+<div class="row gap-1">
+  <a class="btn btn-gold" href="/dashboard"><i data-lucide="layout-dashboard"></i> Back to Dashboard</a>
+  <a class="btn btn-secondary" href="/trades/import">Import CSV</a>
+</div>
+{% endblock %}
+{% block head %}
+<style>
+.code-block {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  color: var(--gold);
+  font-family: var(--font-mono);
+}
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+</style>
+{% endblock %}

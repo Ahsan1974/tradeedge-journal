@@ -16,6 +16,7 @@ from app.services.mt5_service import sync_closed_trades
 
 
 def main() -> int:
+    quiet = "--quiet" in sys.argv or "-q" in sys.argv
     get_settings.cache_clear()
     init_db()
     db = SessionLocal()
@@ -24,7 +25,20 @@ def main() -> int:
         print(result.message)
         for err in result.errors:
             print("ERROR:", err, file=sys.stderr)
-        return 0 if result.connected and not result.errors else 1
+        ok = bool(result.connected and not result.errors)
+        if not quiet and sys.platform == "win32" and sys.stdout.isatty():
+            try:
+                import ctypes
+
+                ctypes.windll.user32.MessageBoxW(
+                    0,
+                    (result.message or "Done")[:500],
+                    "TradeEdge MT5 Sync" + (" — OK" if ok else " — Check errors"),
+                    0x40 if ok else 0x30,
+                )
+            except Exception:  # noqa: BLE001
+                pass
+        return 0 if ok else 1
     finally:
         db.close()
 

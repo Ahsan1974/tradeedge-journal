@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}{{ review.title }} — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row-between mb-2" style="flex-wrap:wrap">
+  <div>
+    <h2 style="margin:0">{{ review.title }}</h2>
+    <p class="muted text-sm" style="margin:0.25rem 0 0">{{ review.period_label }}</p>
+  </div>
+  <div class="row gap-1" style="flex-wrap:wrap">
+    <a class="btn {% if scope=='daily' %}btn-gold{% else %}btn-secondary{% endif %} btn-sm" href="/review?scope=daily">Daily</a>
+    <a class="btn {% if scope=='weekly' %}btn-gold{% else %}btn-secondary{% endif %} btn-sm" href="/review?scope=weekly">Weekly</a>
+    <a class="btn btn-secondary btn-sm" href="/journal/new">Add journal note</a>
+  </div>
+</div>
+
+<div class="card mb-2">
+  <div class="card-header"><h3>Highlights</h3></div>
+  <ul class="stat-list" style="list-style:none;padding:0;margin:0">
+    {% for h in review.highlights %}
+    <li class="stat-row" style="justify-content:flex-start;gap:0.75rem">
+      <i data-lucide="sparkles" style="width:16px;flex-shrink:0"></i>
+      <span>{{ h }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="grid grid-kpi mb-2 stagger">
+  {% set cards = [
+    ('Net P/L', review.stats.net_pnl, 'wallet'),
+    ('Trades', review.stats.closed_trades, 'list'),
+    ('Win Rate', review.stats.win_rate, 'target'),
+    ('Followed Plan', review.followed_plan_pct, 'check-circle'),
+    ('Win Streak', review.streaks.current_win_streak, 'flame'),
+    ('Loss Streak', review.streaks.current_loss_streak, 'alert-triangle')
+  ] %}
+  {% for label, value, icon in cards %}
+  <div class="kpi-card">
+    <div class="kpi-label"><span>{{ label }}</span><span class="kpi-icon"><i data-lucide="{{ icon }}"></i></span></div>
+    <div class="kpi-value {% if label in ['Net P/L'] %}{{ value|pnl_class }}{% elif label == 'Loss Streak' and value %}negative{% elif label == 'Win Streak' and value %}positive{% endif %}">
+      {% if label == 'Net P/L' %}{{ value|money(show_sign=True) }}
+      {% elif label == 'Win Rate' or label == 'Followed Plan' %}{{ value|pct if value is not none else '—' }}
+      {% else %}{{ value if value is not none else '—' }}{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="grid grid-2 mb-2">
+  <div class="card">
+    <div class="card-header"><h3>Goals &amp; streaks</h3></div>
+    <div class="stack" style="gap:0.85rem">
+      {% for g in review.goals %}
+      <div>
+        <div class="row-between text-sm">
+          <span>{{ g.label }}</span>
+          <strong class="{% if g.met %}positive{% endif %}">
+            {% if g.unit == 'money' %}{{ g.current|money(show_sign=True) }} / {{ g.target|money }}
+            {% else %}{{ g.current|pct }} / {{ g.target|pct }}{% endif %}
+          </strong>
+        </div>
+        <div class="goal-bar" aria-hidden="true"><span style="width:{% if g.pct_complete > 100 %}100{% else %}{{ '%.0f'|format(g.pct_complete) }}{% endif %}%"></span></div>
+      </div>
+      {% endfor %}
+      <div class="stat-list">
+        <div class="stat-row"><span>Max win streak</span><span class="positive">{{ review.streaks.max_win_streak }}</span></div>
+        <div class="stat-row"><span>Max loss streak</span><span class="negative">{{ review.streaks.max_loss_streak }}</span></div>
+        <div class="stat-row"><span>Top setup</span><span>{{ review.top_setup or '—' }}</span></div>
+        <div class="stat-row"><span>Stronger market</span><span>{{ review.better_market or '—' }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Best / worst</h3></div>
+    <div class="stat-list">
+      {% if review.best_trade %}
+      <div class="stat-row">
+        <span>Best · {{ review.best_trade.market }}</span>
+        <a class="positive" href="/trades/{{ review.best_trade.id }}">{{ review.best_trade.net_profit_loss|money(show_sign=True) }}</a>
+      </div>
+      {% else %}
+      <div class="stat-row"><span>Best</span><span>—</span></div>
+      {% endif %}
+      {% if review.worst_trade %}
+      <div class="stat-row">
+        <span>Worst · {{ review.worst_trade.market }}</span>
+        <a class="negative" href="/trades/{{ review.worst_trade.id }}">{{ review.worst_trade.net_profit_loss|money(show_sign=True) }}</a>
+      </div>
+      {% else %}
+      <div class="stat-row"><span>Worst</span><span>—</span></div>
+      {% endif %}
+      <div class="stat-row"><span>Journal notes</span><span>{{ review.journal_count }}</span></div>
+      <div class="stat-row"><span>Expectancy</span><span>{{ review.stats.expectancy|money(show_sign=True) if review.stats.expectancy is not none else '—' }}</span></div>
+      <div class="stat-row"><span>Profit factor</span><span>{{ review.stats.profit_factor|ratio if review.stats.profit_factor is not none else '—' }}</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3 mb-2">
+  <div class="card">
+    <div class="card-header"><h3>Lessons</h3></div>
+    {% if review.lessons %}
+    <ul class="muted text-sm" style="margin:0;padding-left:1.1rem">{% for x in review.lessons %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted text-sm">No lessons logged this period.</p>{% endif %}
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Mistakes</h3></div>
+    {% if review.mistakes %}
+    <ul class="muted text-sm" style="margin:0;padding-left:1.1rem">{% for x in review.mistakes %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted text-sm">No mistakes logged — keep it that way.</p>{% endif %}
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Emotions</h3></div>
+    {% if review.emotions %}
+    <ul class="muted text-sm" style="margin:0;padding-left:1.1rem">{% for x in review.emotions %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted text-sm">No emotion tags this period.</p>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>Trades in period</h3>
+    <a class="btn btn-ghost btn-sm" href="/trades">All trades</a>
+  </div>
+  {% if review.trades %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Closed</th><th>Market</th><th>Dir</th><th>Net</th><th>Setup</th></tr></thead>
+      <tbody>
+        {% for t in review.trades|reverse %}
+        <tr>
+          <td><a href="/trades/{{ t.id }}">{{ (t.close_date or t.trade_date)|d }}</a></td>
+          <td class="{{ t.market|market_class }}">{{ t.market }}</td>
+          <td>{{ t.direction }}</td>
+          <td class="{{ t.net_profit_loss|pnl_class }}">{{ t.net_profit_loss|money(show_sign=True) }}</td>
+          <td>{{ t.setup or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted text-sm">No closed trades in this window.</p>
+  {% endif %}
+</div>
+{% endblock %}

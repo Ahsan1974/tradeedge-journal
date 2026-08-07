@@ -13,10 +13,7 @@
       <button type="submit" class="btn btn-gold"><i data-lucide="refresh-cw"></i> Sync from MT5</button>
     </form>
     {% else %}
-    <form method="post" action="/trades/sync-mt5">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="btn btn-secondary" title="MT5 sync runs on your Windows PC"><i data-lucide="info"></i> How to sync</button>
-    </form>
+    <a class="btn btn-gold" href="/sync"><i data-lucide="refresh-cw"></i> Sync guide</a>
     {% endif %}
     <a class="btn btn-secondary" href="/trades">View Trades</a>
   </div>
@@ -105,7 +102,13 @@
      data-session="{{ filters.session_filter }}"
      data-start="{{ filters.start or '' }}"
      data-end="{{ filters.end or '' }}">
-  <div class="card span-2"><div class="card-header"><h3>Cumulative P/L</h3></div><div class="chart-box"><canvas id="chartCumulative"></canvas></div></div>
+  <div class="card span-2">
+    <div class="card-header">
+      <h3>Equity vs balance</h3>
+    </div>
+    <div class="chart-box"><canvas id="chartCumulative"></canvas></div>
+    <p class="muted text-sm" id="equityBalanceNote" style="margin:0.75rem 1rem 1rem"></p>
+  </div>
   <div class="card"><div class="card-header"><h3>Win / Loss / BE</h3></div><div class="chart-box sm"><canvas id="chartDistribution"></canvas></div></div>
   <div class="card"><div class="card-header"><h3>Trades by Weekday</h3></div><div class="chart-box sm"><canvas id="chartFrequency"></canvas></div></div>
   <div class="card"><div class="card-header"><h3>Daily P/L</h3></div><div class="chart-box sm"><canvas id="chartDaily"></canvas></div></div>
@@ -143,6 +146,46 @@
     {% endfor %}
   </div>
 </div>
+
+{% if goals is defined and goals %}
+<div class="grid grid-2 mb-2">
+  <div class="card">
+    <div class="card-header">
+      <h3>Goals</h3>
+      <a class="btn btn-ghost btn-sm" href="/settings">Edit</a>
+    </div>
+    <div class="stack" style="gap:0.85rem">
+      {% for g in goals %}
+      <div>
+        <div class="row-between text-sm">
+          <span>{{ g.label }}</span>
+          <strong class="{% if g.met %}positive{% endif %}">
+            {% if g.unit == 'money' %}{{ g.current|money(show_sign=True) }} / {{ g.target|money }}
+            {% else %}{{ g.current|pct }} / {{ g.target|pct }}{% endif %}
+          </strong>
+        </div>
+        <div class="goal-bar" aria-hidden="true"><span style="width:{% if g.pct_complete > 100 %}100{% else %}{{ '%.0f'|format(g.pct_complete) }}{% endif %}%"></span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>Streaks</h3>
+      <a class="btn btn-ghost btn-sm" href="/review?scope=weekly">Review</a>
+    </div>
+    <div class="stat-list">
+      <div class="stat-row"><span>Current win streak</span><span class="positive">{{ streaks.current_win_streak }}</span></div>
+      <div class="stat-row"><span>Current loss streak</span><span class="{% if streaks.current_loss_streak %}negative{% endif %}">{{ streaks.current_loss_streak }}</span></div>
+      <div class="stat-row"><span>Max win streak</span><span class="positive">{{ streaks.max_win_streak }}</span></div>
+      <div class="stat-row"><span>Max loss streak</span><span class="negative">{{ streaks.max_loss_streak }}</span></div>
+      <div class="stat-row"><span>Active</span><span>
+        {% if streaks.active == 'win' %}Winning{% elif streaks.active == 'loss' %}Losing{% else %}Flat{% endif %}
+      </span></div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {% if better_market %}
 <div class="compare-banner">Currently stronger market in this filter: <strong class="{{ better_market|market_class }}">{{ better_market }}</strong></div>

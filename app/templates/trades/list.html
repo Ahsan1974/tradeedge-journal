@@ -15,12 +15,9 @@
       </button>
     </form>
     {% else %}
-    <form method="post" action="/trades/sync-mt5">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="btn btn-secondary" id="syncMt5Btn">
-        <i data-lucide="info"></i> How to sync
-      </button>
-    </form>
+    <a class="btn btn-gold" id="syncMt5Btn" href="/sync">
+      <i data-lucide="refresh-cw"></i> Sync guide
+    </a>
     {% endif %}
     <a class="btn btn-secondary" href="/trades/export?scope=all">Export All</a>
     <a class="btn btn-ghost btn-sm" href="/trades/export?scope=xau">XAU</a>

@@ -135,5 +135,43 @@ window.TradeEdgeCharts = (function () {
     });
   }
 
-  return { COLORS, fetchJSON, lineChart, doughnutChart, barChart, emptyMessage, moneyTooltip };
+  function multiLineChart(canvasId, labels, datasets, opts = {}) {
+    const el = document.getElementById(canvasId);
+    if (!el) return null;
+    if (!labels.length) {
+      emptyMessage(canvasId);
+      return null;
+    }
+    return new Chart(el, {
+      type: "line",
+      data: {
+        labels,
+        datasets: datasets.map((ds) => ({
+          label: ds.label || "Value",
+          data: ds.values || [],
+          borderColor: ds.color || COLORS.blue,
+          backgroundColor: "transparent",
+          fill: false,
+          tension: 0.25,
+          pointRadius: labels.length > 40 ? 0 : 2,
+          borderWidth: 2,
+          borderDash: ds.dashed ? [6, 4] : [],
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: "bottom" },
+          tooltip: { callbacks: { label: moneyTooltip } },
+        },
+        scales: {
+          x: { ticks: { maxTicksLimit: 8 }, grid: { color: COLORS.grid } },
+          y: { grid: { color: COLORS.grid } },
+        },
+      },
+    });
+  }
+
+  return { COLORS, fetchJSON, lineChart, multiLineChart, doughnutChart, barChart, emptyMessage, moneyTooltip };
 })();
